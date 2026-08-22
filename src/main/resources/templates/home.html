@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="AOS Drive — scalable cloud file management interface" />
+    <title>AOS Drive</title>
+
+    <style>
+        :root {
+          --bg: #f4efe6;
+          --surface: rgba(255, 252, 245, 0.88);
+          --surface-strong: #fffdf8;
+          --surface-muted: #ede5d7;
+          --ink: #25231f;
+          --ink-soft: #716b61;
+          --border: rgba(66, 58, 45, 0.15);
+          --accent: #bd5b34;
+          --accent-dark: #873d25;
+          --accent-soft: #f2d7c8;
+          --green: #426b58;
+          --gold: #aa7b32;
+          --danger: #a7443f;
+          --shadow: 0 18px 50px rgba(62, 48, 32, 0.10);
+          --radius-lg: 24px;
+          --radius-md: 16px;
+          --radius-sm: 11px;
+          --sidebar-width: 264px;
+          --topbar-height: 78px;
+          --transition: 180ms ease;
+        }
+
+        * {
+          box-sizing: border-box;
+        }
+
+        html {
+          scroll-behavior: smooth;
+        }
+
+        body {
+          margin: 0;
+          min-height: 100vh;
+          color: var(--ink);
+          background:
+            radial-gradient(circle at 78% 8%, rgba(189, 91, 52, 0.13), transparent 28%),
+            radial-gradient(circle at 8% 92%, rgba(66, 107, 88, 0.12), transparent 29%),
+            linear-gradient(135deg, #f2ece1, #f8f4ed 48%, #eee6da);
+          font-family: Georgia, "Times New Roman", serif;
+          overflow-x: hidden;
+        }
+
+        button,
+        input {
+          font: inherit;
+        }
+
+        button {
+          cursor: pointer;
+        }
+
+        .app-shell {
+          min-height: 100vh;
+          display: grid;
+          grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+        }
+
+        .sidebar {
+          position: sticky;
+          top: 0;
+          height: 100vh;
+          padding: 22px 18px;
+          border-right: 1px solid var(--border);
+          background: rgba(246, 240, 230, 0.78);
+          backdrop-filter: blur(22px);
+          z-index: 30;
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+
+        .brand {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 4px 8px 12px;
+        }
+
+        .brand-mark {
+          width: 42px;
+          height: 42px;
+          border-radius: 13px;
+          display: grid;
+          place-items: center;
+          color: #fffaf1;
+          background: linear-gradient(145deg, var(--accent), var(--accent-dark));
+          box-shadow: 0 9px 20px rgba(135, 61, 37, 0.24);
+          font-family: "Courier New", monospace;
+          font-weight: 700;
+          letter-spacing: -1px;
+        }
+
+        .brand-copy strong {
+          display: block;
+          font-size: 18px;
+          letter-spacing: 0.02em;
+        }
+
+        .brand-copy span {
+          font-family: "Courier New", monospace;
+          font-size: 11px;
+          color: var(--ink-soft);
+          letter-spacing: 0.09em;
+          text-transform: uppercase;
+        }
+
+        .new-button {
+          width: 100%;
+          min-height: 48px;
+          border: 0;
+          border-radius: 14px;
+          padding: 0 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 9px;
+          color: #fff9f2;
+          background: linear-gradient(145deg, var(--accent), #9f472c);
+          box-shadow: 0 10px 25px rgba(135, 61, 37, 0.22);
+          font-family: "Courier New", monospace;
+          font-weight: 700;
+          transition: transform var(--transition), box-shadow var(--transition);
+        }
+
+        .new-button:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 14px 30px rgba(135, 61, 37, 0.28);
+        }
+
+        .nav-section {
+          display: grid;
+          gap: 5px;
+        }
+
+        .nav-label {
+          margin: 7px 11px 4px;
+          color: var(--ink-soft);
+          font-family: "Courier New", monospace;
+          font-size: 10px;
+          letter-spacing: 0.15em;
+          text-transform: uppercase;
+        }
+
+        .nav-item {
+          width: 100%;
+          border: 0;
+          background: transparent;
+          border-radius: 12px;
+          padding: 11px 12px;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          color: var(--ink-soft);
+          text-align: left;
+          transition: background var(--transition), color var(--transition), transform var(--transition);
+        }
+
+        .nav-item:hover {
+          color: var(--ink);
+          background: rgba(255, 255, 255, 0.53);
+          transform: translateX(3px);
+        }
+
+        .nav-item.active {
+          color: var(--accent-dark);
+          background: var(--accent-soft);
+          font-weight: 700;
+        }
+
+        .nav-icon {
+          width: 20px;
+          text-align: center;
+          font-family: "Courier New", monospace;
+          font-size: 15px;
+        }
+
+        .storage {
+          margin-top: auto;
+          padding: 15px;
+          border: 1px solid var(--border);
+          border-radius: 16px;
+          background: rgba(255, 255, 255, 0.45);
+        }
+
+        .storage-head {
+          display: flex;
+          justify-content: space-between;
+          gap: 8px;
+          font-size: 13px;
+        }
+
+        .storage-head span:last-child {
+          color: var(--ink-soft);
+          font-family: "Courier New", monospace;
+          font-size: 11px;
+        }
+
+        .storage-bar {
+          height: 7px;
+          margin-top: 11px;
+          overflow: hidden;
+          border-radius: 99px;
+          background: #ddd4c7;
+        }
+
+        .storage-bar span {
+          display: block;
+          width: 38%;
+          height: 100%;
+          border-radius: inherit;
+          background: linear-gradient(90deg, var(--green), #6f907e);
+        }
+
+        .main {
+          min-width: 0;
+        }
+
+        .topbar {
+          position: sticky;
+          top: 0;
+          height: var(--topbar-height);
+          display: grid;
+          grid-template-columns: auto minmax(220px, 650px) auto;
+          align-items: center;
+          gap: 20px;
+          padding: 14px 28px;
+          border-bottom: 1px solid var(--border);
+          background: rgba(248, 244, 237, 0.73);
+          backdrop-filter: blur(22px);
+          z-index: 20;
+        }
+
+        .menu-button {
+          display: none;
+          width: 40px;
+          height: 40px;
+          border: 1px solid var(--border);
+          border-radius: 11px;
+          background: var(--surface);
+        }
+
+        .page-identity {
+          font-family: "Courier New", monospace;
+          font-size: 13px;
+          color: var(--ink-soft);
+          white-space: nowrap;
+        }
+
+        .search-wrap {
+          position: relative;
+        }
+
+        .search-wrap input {
+          width: 100%;
+          height: 48px;
+          border: 1px solid var(--border);
+          border-radius: 16px;
+          outline: none;
+          padding: 0 50px 0 46px;
+          color: var(--ink);
+          background: rgba(255, 253, 248, 0.79);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+          font-family: "Courier New", monospace;
+          font-size: 13px;
+          transition: border var(--transition), box-shadow var(--transition);
+        }
+
+        .search-wrap input:focus {
+          border-color: rgba(189, 91, 52, 0.55);
+          box-shadow: 0 0 0 4px rgba(189, 91, 52, 0.09);
+        }
+
+        .search-icon,
+        .shortcut {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          color: var(--ink-soft);
+          font-family: "Courier New", monospace;
+        }
+
+        .search-icon {
+          left: 17px;
+        }
+
+        .shortcut {
+          right: 14px;
+          padding: 3px 7px;
+          border: 1px solid var(--border);
+          border-radius: 6px;
+          font-size: 10px;
+          background: #f2ecdf;
+        }
+
+        .profile {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          justify-self: end;
+        }
+
+        .icon-button {
+          width: 42px;
+          height: 42px;
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          color: var(--ink);
+          background: var(--surface);
+          transition: transform var(--transition), background var(--transition);
+        }
+
+        .icon-button:hover {
+          transform: translateY(-2px);
+          background: var(--surface-strong);
+        }
+
+        .avatar {
+          width: 42px;
+          height: 42px;
+          border: 0;
+          border-radius: 50%;
+          display: grid;
+          place-items: center;
+          color: #fff;
+          background: linear-gradient(145deg, var(--green), #263f35);
+          font-family: "Courier New", monospace;
+          font-size: 12px;
+          font-weight: 700;
+        }
+
+        .content {
+          padding: 34px 34px 60px;
+          max-width: 1580px;
+          margin: 0 auto;
+        }
+
+        .hero {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          align-items: end;
+          gap: 22px;
+          margin-bottom: 30px;
+        }
+
+        .eyebrow {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 9px;
+          color: var(--accent-dark);
+          font-family: "Courier New", monospace;
+          font-size: 11px;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+        }
+
+        .eyebrow::before {
+          content: "";
+          width: 28px;
+          height: 1px;
+          background: currentColor;
+        }
+
+        h1 {
+          margin: 0;
+          max-width: 760px;
+          font-size: clamp(32px, 5vw, 57px);
+          line-height: 0.98;
+          font-weight: 500;
+          letter-spacing: -0.045em;
+        }
+
+        .hero p {
+          max-width: 720px;
+          margin: 17px 0 0;
+          color: var(--ink-soft);
+          font-size: 16px;
+          line-height: 1.65;
+        }
+
+        .hero-actions {
+          display: flex;
+          gap: 10px;
+          align-items: center;
+        }
+
+        .secondary-button {
+          min-height: 44px;
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          padding: 0 14px;
+          color: var(--ink);
+          background: var(--surface);
+          font-family: "Courier New", monospace;
+          font-size: 12px;
+        }
+
+        .section {
+          margin-top: 34px;
+        }
+
+        .section-head {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 16px;
+          margin-bottom: 14px;
+        }
+
+        .section-title {
+          margin: 0;
+          font-size: 20px;
+          font-weight: 500;
+        }
+
+        .section-meta {
+          color: var(--ink-soft);
+          font-family: "Courier New", monospace;
+          font-size: 11px;
+        }
+
+        .quick-grid {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(180px, 1fr));
+          gap: 16px;
+        }
+
+        .quick-card {
+          position: relative;
+          min-height: 148px;
+          overflow: hidden;
+          border: 1px solid var(--border);
+          border-radius: var(--radius-md);
+          padding: 19px;
+          background: var(--surface);
+          box-shadow: 0 10px 30px rgba(62, 48, 32, 0.06);
+          transition: transform var(--transition), box-shadow var(--transition), border var(--transition);
+        }
+
+        .quick-card:hover {
+          transform: translateY(-4px);
+          border-color: rgba(189, 91, 52, 0.34);
+          box-shadow: var(--shadow);
+        }
+
+        .quick-card::after {
+          content: "";
+          position: absolute;
+          width: 80px;
+          height: 80px;
+          right: -25px;
+          bottom: -27px;
+          border-radius: 50%;
+          background: var(--accent-soft);
+          opacity: 0.7;
+        }
+
+        .quick-card:nth-child(2)::after {
+          background: #d5e3dc;
+        }
+
+        .quick-card:nth-child(3)::after {
+          background: #e7d7b7;
+        }
+
+        .quick-card:nth-child(4)::after {
+          background: #d9d5e4;
+        }
+
+        .card-symbol {
+          width: 39px;
+          height: 39px;
+          display: grid;
+          place-items: center;
+          border-radius: 12px;
+          color: var(--accent-dark);
+          background: var(--accent-soft);
+          font-family: "Courier New", monospace;
+          font-weight: 700;
+        }
+
+        .quick-card h3 {
+          margin: 17px 0 5px;
+          font-size: 17px;
+          font-weight: 600;
+        }
+
+        .quick-card p {
+          margin: 0;
+          color: var(--ink-soft);
+          font-family: "Courier New", monospace;
+          font-size: 11px;
+          line-height: 1.5;
+        }
+
+        .files-panel {
+          overflow: hidden;
+          border: 1px solid var(--border);
+          border-radius: var(--radius-lg);
+          background: rgba(255, 253, 248, 0.73);
+          box-shadow: 0 17px 42px rgba(66, 52, 33, 0.07);
+        }
+
+        .files-toolbar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 14px;
+          padding: 17px 19px;
+          border-bottom: 1px solid var(--border);
+        }
+
+        .filter-group {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+
+        .filter {
+          border: 1px solid transparent;
+          border-radius: 9px;
+          padding: 7px 10px;
+          color: var(--ink-soft);
+          background: transparent;
+          font-family: "Courier New", monospace;
+          font-size: 11px;
+        }
+
+        .filter.active {
+          border-color: var(--border);
+          color: var(--ink);
+          background: var(--surface-muted);
+        }
+
+        .file-list {
+          display: grid;
+        }
+
+        .file-row {
+          display: grid;
+          grid-template-columns: minmax(220px, 2fr) minmax(120px, 1fr) 120px 90px 42px;
+          align-items: center;
+          gap: 18px;
+          min-height: 68px;
+          padding: 9px 18px;
+          border-bottom: 1px solid var(--border);
+          transition: background var(--transition);
+        }
+
+        .file-row:last-child {
+          border-bottom: 0;
+        }
+
+        .file-row:hover {
+          background: rgba(244, 237, 226, 0.72);
+        }
+
+        .file-name {
+          display: flex;
+          align-items: center;
+          gap: 13px;
+          min-width: 0;
+        }
+
+        .file-icon {
+          flex: 0 0 auto;
+          width: 39px;
+          height: 39px;
+          display: grid;
+          place-items: center;
+          border-radius: 10px;
+          background: #eee6d8;
+          font-family: "Courier New", monospace;
+          font-size: 11px;
+          font-weight: 700;
+        }
+
+        .file-icon.code {
+          color: #fff;
+          background: var(--green);
+        }
+
+        .file-icon.pdf {
+          color: #fff;
+          background: var(--danger);
+        }
+
+        .file-icon.folder {
+          color: var(--accent-dark);
+          background: var(--accent-soft);
+        }
+
+        .file-name strong {
+          display: block;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          font-size: 14px;
+        }
+
+        .file-name span,
+        .file-cell {
+          color: var(--ink-soft);
+          font-family: "Courier New", monospace;
+          font-size: 11px;
+        }
+
+        .row-action {
+          width: 34px;
+          height: 34px;
+          border: 0;
+          border-radius: 9px;
+          background: transparent;
+          color: var(--ink-soft);
+        }
+
+        .row-action:hover {
+          background: var(--surface-muted);
+          color: var(--ink);
+        }
+
+        .ai-panel {
+          position: fixed;
+          right: 24px;
+          bottom: 24px;
+          width: min(390px, calc(100vw - 32px));
+          border: 1px solid rgba(66, 58, 45, 0.19);
+          border-radius: 20px;
+          background: rgba(37, 35, 31, 0.95);
+          color: #f8f1e5;
+          box-shadow: 0 28px 70px rgba(37, 35, 31, 0.28);
+          overflow: hidden;
+          transform: translateY(130%);
+          opacity: 0;
+          transition: transform 240ms ease, opacity 240ms ease;
+          z-index: 50;
+        }
+
+        .ai-panel.open {
+          transform: translateY(0);
+          opacity: 1;
+        }
+
+        .ai-head {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 14px 16px;
+          border-bottom: 1px solid rgba(255,255,255,0.12);
+          font-family: "Courier New", monospace;
+          font-size: 12px;
+        }
+
+        .ai-body {
+          padding: 17px;
+        }
+
+        .ai-body p {
+          margin: 0 0 13px;
+          color: #cfc7bb;
+          line-height: 1.55;
+          font-size: 13px;
+        }
+
+        .terminal-line {
+          padding: 12px;
+          border-radius: 10px;
+          background: #171815;
+          color: #a8d5b8;
+          font-family: "Courier New", monospace;
+          font-size: 12px;
+        }
+
+        .ai-input {
+          display: flex;
+          gap: 8px;
+          margin-top: 12px;
+        }
+
+        .ai-input input {
+          flex: 1;
+          min-width: 0;
+          height: 42px;
+          border: 1px solid rgba(255,255,255,0.16);
+          border-radius: 10px;
+          outline: none;
+          padding: 0 12px;
+          color: #fff;
+          background: rgba(255,255,255,0.06);
+          font-family: "Courier New", monospace;
+          font-size: 11px;
+        }
+
+        .ai-input button {
+          border: 0;
+          border-radius: 10px;
+          padding: 0 14px;
+          color: #fff;
+          background: var(--accent);
+          font-family: "Courier New", monospace;
+          font-size: 11px;
+        }
+
+        .ai-fab {
+          position: fixed;
+          right: 24px;
+          bottom: 24px;
+          width: 58px;
+          height: 58px;
+          border: 0;
+          border-radius: 18px;
+          color: #fff;
+          background: linear-gradient(145deg, var(--ink), #4b473f);
+          box-shadow: 0 16px 34px rgba(37, 35, 31, 0.25);
+          font-family: "Courier New", monospace;
+          font-weight: 700;
+          z-index: 40;
+          transition: transform var(--transition);
+        }
+
+        .ai-fab:hover {
+          transform: translateY(-3px) rotate(-2deg);
+        }
+
+
+        .profile-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(37, 35, 31, 0.28);
+          backdrop-filter: blur(4px);
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 240ms ease;
+          z-index: 70;
+        }
+
+        .profile-overlay.open {
+          opacity: 1;
+          pointer-events: auto;
+        }
+
+        .profile-drawer {
+          position: fixed;
+          top: 0;
+          right: 0;
+          width: 30vw;
+          min-width: 360px;
+          max-width: 520px;
+          height: 100vh;
+          padding: 22px;
+          overflow-y: auto;
+          border-left: 1px solid var(--border);
+          background:
+            radial-gradient(circle at 90% 5%, rgba(189, 91, 52, 0.16), transparent 28%),
+            rgba(248, 244, 237, 0.97);
+          backdrop-filter: blur(24px);
+          box-shadow: -30px 0 70px rgba(37, 35, 31, 0.18);
+          transform: translateX(105%);
+          transition: transform 280ms cubic-bezier(.22,.8,.22,1);
+          z-index: 80;
+        }
+
+        .profile-drawer.open { transform: translateX(0); }
+
+        .drawer-head {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+          padding-bottom: 18px;
+          border-bottom: 1px solid var(--border);
+        }
+
+        .drawer-title {
+          font-family: "Courier New", monospace;
+          font-size: 12px;
+          letter-spacing: .12em;
+          text-transform: uppercase;
+          color: var(--ink-soft);
+        }
+
+        .drawer-close {
+          width: 40px;
+          height: 40px;
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          background: var(--surface);
+        }
+
+        .profile-hero {
+          display: grid;
+          justify-items: center;
+          text-align: center;
+          padding: 30px 0 22px;
+        }
+
+        .profile-avatar-large {
+          width: 92px;
+          height: 92px;
+          border-radius: 28px;
+          display: grid;
+          place-items: center;
+          color: #fff;
+          background: linear-gradient(145deg, var(--green), #263f35);
+          box-shadow: 0 18px 34px rgba(38, 63, 53, .22);
+          font: 700 24px "Courier New", monospace;
+        }
+
+        .profile-hero h2 { margin: 16px 0 5px; font-size: 26px; font-weight: 500; }
+        .profile-hero p { margin: 0; color: var(--ink-soft); font: 12px "Courier New", monospace; }
+
+        .profile-status {
+          margin-top: 12px;
+          padding: 6px 10px;
+          border-radius: 999px;
+          color: var(--green);
+          background: #dce9e2;
+          font: 700 10px "Courier New", monospace;
+          letter-spacing: .08em;
+          text-transform: uppercase;
+        }
+
+        .profile-section {
+          padding: 20px 0;
+          border-top: 1px solid var(--border);
+        }
+
+        .profile-section h3 {
+          margin: 0 0 12px;
+          font-size: 16px;
+          font-weight: 500;
+        }
+
+        .profile-detail {
+          display: grid;
+          grid-template-columns: 1fr auto;
+          gap: 14px;
+          padding: 11px 0;
+          color: var(--ink-soft);
+          font: 11px "Courier New", monospace;
+        }
+
+        .profile-detail strong { color: var(--ink); font-weight: 700; text-align: right; }
+
+        .profile-action {
+          width: 100%;
+          min-height: 46px;
+          margin-top: 9px;
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          text-align: left;
+          padding: 0 14px;
+          color: var(--ink);
+          background: rgba(255,255,255,.5);
+          font: 12px "Courier New", monospace;
+        }
+
+        .profile-action.danger { color: var(--danger); }
+
+        @media (max-width: 720px) {
+          .profile-drawer { width: 92vw; min-width: 0; }
+        }
+
+        .modal-backdrop {
+          position: fixed;
+          inset: 0;
+          display: none;
+          place-items: center;
+          padding: 20px;
+          background: rgba(37, 35, 31, 0.42);
+          backdrop-filter: blur(8px);
+          z-index: 60;
+        }
+
+        .modal-backdrop.open {
+          display: grid;
+        }
+
+        .modal {
+          width: min(520px, 100%);
+          padding: 24px;
+          border: 1px solid var(--border);
+          border-radius: 22px;
+          background: var(--surface-strong);
+          box-shadow: var(--shadow);
+        }
+
+        .modal h2 {
+          margin: 0 0 5px;
+          font-size: 25px;
+          font-weight: 500;
+        }
+
+        .modal p {
+          margin: 0 0 20px;
+          color: var(--ink-soft);
+          font-family: "Courier New", monospace;
+          font-size: 11px;
+        }
+
+        .new-options {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 12px;
+        }
+
+        .new-option {
+          min-height: 105px;
+          border: 1px solid var(--border);
+          border-radius: 14px;
+          padding: 15px;
+          text-align: left;
+          background: #f8f3e9;
+          transition: transform var(--transition), border var(--transition);
+        }
+
+        .new-option:hover {
+          transform: translateY(-3px);
+          border-color: var(--accent);
+        }
+
+        .new-option strong {
+          display: block;
+          margin-bottom: 7px;
+        }
+
+        .new-option span {
+          color: var(--ink-soft);
+          font-family: "Courier New", monospace;
+          font-size: 10px;
+          line-height: 1.5;
+        }
+
+        .modal-close {
+          width: 100%;
+          min-height: 42px;
+          margin-top: 16px;
+          border: 1px solid var(--border);
+          border-radius: 11px;
+          background: transparent;
+          font-family: "Courier New", monospace;
+          font-size: 11px;
+        }
+
+        .empty-state {
+          display: none;
+          padding: 55px 20px;
+          text-align: center;
+          color: var(--ink-soft);
+          font-family: "Courier New", monospace;
+          font-size: 12px;
+        }
+
+        @media (max-width: 1100px) {
+          .quick-grid {
+            grid-template-columns: repeat(2, minmax(180px, 1fr));
+          }
+
+          .file-row {
+            grid-template-columns: minmax(220px, 2fr) minmax(110px, 1fr) 100px 42px;
+          }
+
+          .file-size {
+            display: none;
+          }
+        }
+
+        @media (max-width: 820px) {
+          .app-shell {
+            grid-template-columns: 1fr;
+          }
+
+          .sidebar {
+            position: fixed;
+            left: 0;
+            transform: translateX(-105%);
+            width: min(295px, 88vw);
+            transition: transform 240ms ease;
+            box-shadow: 28px 0 60px rgba(37, 35, 31, 0.18);
+          }
+
+          .sidebar.open {
+            transform: translateX(0);
+          }
+
+          .topbar {
+            grid-template-columns: auto minmax(0, 1fr) auto;
+            padding: 12px 16px;
+          }
+
+          .menu-button {
+            display: block;
+          }
+
+          .page-identity,
+          .profile .icon-button {
+            display: none;
+          }
+
+          .content {
+            padding: 27px 17px 50px;
+          }
+
+          .hero {
+            grid-template-columns: 1fr;
+          }
+
+          .hero-actions {
+            justify-content: flex-start;
+          }
+
+          .file-row {
+            grid-template-columns: minmax(0, 1fr) 42px;
+          }
+
+          .file-owner,
+          .file-date,
+          .file-size {
+            display: none;
+          }
+        }
+
+        @media (max-width: 520px) {
+          .quick-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .topbar {
+            gap: 10px;
+          }
+
+          .shortcut {
+            display: none;
+          }
+
+          .search-wrap input {
+            padding-right: 14px;
+          }
+
+          .new-options {
+            grid-template-columns: 1fr;
+          }
+
+          .hero-actions {
+            width: 100%;
+          }
+
+          .hero-actions button {
+            flex: 1;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          *,
+          *::before,
+          *::after {
+            scroll-behavior: auto !important;
+            transition: none !important;
+          }
+        }
+    </style>
+</head>
+
+<body>
+<div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+        <div class="brand">
+            <div class="brand-mark">A:</div>
+            <div class="brand-copy">
+                <strong>AOS Drive</strong>
+                <span>Personal cloud system</span>
+            </div>
+        </div>
+
+        <button class="new-button" id="newButton">
+            <span>＋</span>
+            <span>NEW OBJECT</span>
+        </button>
+
+        <nav aria-label="Primary navigation">
+            <div class="nav-section">
+                <p class="nav-label">Workspace</p>
+                <button class="nav-item active"><span class="nav-icon">⌂</span>Home</button>
+                <button class="nav-item"><span class="nav-icon">🌩️</span>My Drive</button>
+                <button class="nav-item"><span class="nav-icon">👥</span>Groups</button>
+                <button class="nav-item"><span class="nav-icon">⇄</span>Shared with me</button>
+                <button class="nav-item"><span class="nav-icon">★</span>Starred</button>
+                <button class="nav-item"><span class="nav-icon">🗑️</span>Trash</button>
+            </div>
+
+            <div class="nav-section">
+                <p class="nav-label">System</p>
+                <button class="nav-item"><span class="nav-icon">◫</span>Storage</button>
+                <button class="nav-item"><span class="nav-icon">›_</span>Terminal</button>
+            </div>
+        </nav>
+
+        <div class="storage">
+            <div class="storage-head">
+                <span>System storage</span>
+                <span id="profileStorage-1"></span>
+            </div>
+            <div class="storage-bar"><span id="profileStorageBar" style="width:38%"></span></div>
+        </div>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <button class="menu-button" id="menuButton" aria-label="Open navigation">☰</button>
+                <span class="page-identity">drive://home</span>
+            </div>
+
+            <label class="search-wrap">
+                <span class="search-icon">⌕</span>
+                <input id="searchInput" type="search" placeholder="Search files, folders, or commands..." />
+                <span class="shortcut">⌘ K</span>
+            </label>
+
+            <div class="profile">
+                <button class="icon-button" title="Notifications">◌</button>
+                <button class="avatar" id="profileButton" title="Open profile"></button>
+            </div>
+        </header>
+
+        <div class="content">
+            <section class="hero">
+                <div>
+                    <div class="eyebrow">Connected workspace</div>
+                    <h1>Your files, commands and ideas—under one roof.</h1>
+                    <p>
+                        A focused cloud workspace for storing files, collaborating securely,
+                        and preparing for browser-based development tools.
+                    </p>
+                </div>
+
+                <div class="hero-actions">
+                    <button class="secondary-button" id="terminalPreview">›_ Terminal preview</button>
+                    <button class="secondary-button" id="uploadButton">↑ Upload file</button>
+                </div>
+            </section>
+
+            <section class="section">
+                <div class="section-head">
+                    <h2 class="section-title">Quick access</h2>
+                    <span class="section-meta">4 locations</span>
+                </div>
+
+                <div class="quick-grid">
+                    <article class="quick-card">
+                        <div class="card-symbol">{ }</div>
+                        <h3>Projects</h3>
+                        <p>Source code, builds and documentation.</p>
+                    </article>
+
+                    <article class="quick-card">
+                        <div class="card-symbol">⇄</div>
+                        <h3>Shared workspace</h3>
+                        <p>Files shared by collaborators and teams.</p>
+                    </article>
+
+                    <article class="quick-card">
+                        <div class="card-symbol">★</div>
+                        <h3>Starred</h3>
+                        <p>High-priority files available immediately.</p>
+                    </article>
+
+                    <article class="quick-card">
+                        <div class="card-symbol">AI</div>
+                        <h3>AI workspace</h3>
+                        <p>Ask, summarize and prepare file actions.</p>
+                    </article>
+                </div>
+            </section>
+
+            <section class="section">
+                <div class="section-head">
+                    <h2 class="section-title">Recent files</h2>
+                    <span class="section-meta" id="resultCount">5 objects</span>
+                </div>
+
+                <div class="files-panel">
+                    <div class="files-toolbar">
+                        <div class="filter-group">
+                            <button class="filter active" data-filter="all">All</button>
+                            <button class="filter" data-filter="folder">Folders</button>
+                            <button class="filter" data-filter="code">Code</button>
+                            <button class="filter" data-filter="document">Documents</button>
+                        </div>
+                        <button class="secondary-button" id="sortButton">Modified ↓</button>
+                    </div>
+
+                    <div class="file-list" id="fileList"></div>
+
+                    <div class="empty-state" id="emptyState">
+                        No objects match this search.
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+</div>
+
+<button class="ai-fab" id="aiFab" aria-label="Open AI assistant">AI</button>
+
+<section class="ai-panel" id="aiPanel" aria-label="AI assistant">
+    <div class="ai-head">
+        <span>AOS ASSISTANT // preview</span>
+        <button class="row-action" id="closeAi" style="color:#fff;">×</button>
+    </div>
+    <div class="ai-body">
+        <p>
+            The assistant is currently a frontend preview. It can later connect to your
+            Spring Boot AI endpoint and file-permission service.
+        </p>
+        <div class="terminal-line">$ aos list --recent --limit 5</div>
+        <div class="ai-input">
+            <input placeholder="Ask about your files..." />
+            <button>RUN</button>
+        </div>
+    </div>
+</section>
+
+
+<div class="profile-overlay" id="profileOverlay"></div>
+<aside class="profile-drawer" id="profileDrawer" aria-label="User profile panel" aria-hidden="true">
+    <div class="drawer-head">
+        <span class="drawer-title">profile://account</span>
+        <button class="drawer-close" id="closeProfile" aria-label="Close profile">×</button>
+    </div>
+
+    <section class="profile-hero">
+        <div class="profile-avatar-large" id="profileInitials"></div>
+        <h2 id="profileName"></h2>
+        <p id="profileEmail"></p>
+        <span id="profileStatus" class="profile-status"></span>
+    </section>
+
+    <section class="profile-section">
+        <h3>Account</h3>
+        <div class="profile-detail"><span>User ID</span><strong id="profileUserId">USR-1042</strong></div>
+        <div class="profile-detail"><span>Role</span><strong id="profileRole">Owner</strong></div>
+        <div class="profile-detail"><span>Plan</span><strong id="profilePlan">Developer</strong></div>
+        <div class="profile-detail"><span>Joined</span><strong id="profileJoined">July 2026</strong></div>
+    </section>
+
+    <section class="profile-section">
+        <h3>Storage</h3>
+
+        <div class="storage">
+            <div class="profile-detail"><span>Used</span><strong id="profileStorage"></strong></div>
+            <div class="storage-bar"><span id="profileStorageBar-1" style="width:38%"></span> </div>
+        </div>
+    </section>
+
+    <section class="profile-section">
+        <h3>Security & settings</h3>
+        <button class="profile-action">Edit profile</button>
+        <button class="profile-action">Security settings</button>
+        <button class="profile-action">Connected devices</button>
+        <button class="profile-action danger">Sign out</button>
+    </section>
+</aside>
+
+<div class="modal-backdrop" id="newModal">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <h2 id="modalTitle">Create something new</h2>
+        <p>Choose an object. Backend APIs can be connected later.</p>
+
+        <div class="new-options">
+            <button class="new-option">
+                <strong>New folder</strong>
+                <span>Create an empty directory in the current location.</span>
+            </button>
+            <button class="new-option">
+                <strong>Upload file</strong>
+                <span>Select one or multiple files from your device.</span>
+            </button>
+            <button class="new-option">
+                <strong>New code file</strong>
+                <span>Prepare a file for the future browser editor.</span>
+            </button>
+            <button class="new-option">
+                <strong>New terminal</strong>
+                <span>Open a secure command session in a later phase.</span>
+            </button>
+        </div>
+
+        <button class="modal-close" id="closeModal">CLOSE</button>
+    </section>
+</div>
+
+<input id="hiddenFileInput" type="file" multiple hidden />
+
+<script>
+    const sidebar = document.getElementById("sidebar");
+    const menuButton = document.getElementById("menuButton");
+    const searchInput = document.getElementById("searchInput");
+    const fileList = document.getElementById("fileList");
+    const filters = [...document.querySelectorAll(".filter")];
+    const emptyState = document.getElementById("emptyState");
+    const resultCount = document.getElementById("resultCount");
+    const newModal = document.getElementById("newModal");
+    const aiPanel = document.getElementById("aiPanel");
+    const aiFab = document.getElementById("aiFab");
+    const hiddenFileInput = document.getElementById("hiddenFileInput");
+    const profileDrawer = document.getElementById("profileDrawer");
+    const profileOverlay = document.getElementById("profileOverlay");
+
+    let activeFilter = "all";
+    let ascending = true;
+
+    // This array is your current frontend state. Replace it with API data later.
+    let files = [
+      { id: 1, name: "cloud-file-manager", type: "folder", subtype: "Spring Boot project", owner: "You", modifiedLabel: "5 min ago", modifiedMinutes: 5, size: "—", icon: "DIR" },
+      { id: 2, name: "SecurityConfig.java", type: "code", subtype: "Java source file", owner: "You", modifiedLabel: "19 min ago", modifiedMinutes: 19, size: "8.4 KB", icon: "JAVA" },
+      { id: 3, name: "drive-dashboard.html", type: "code", subtype: "Frontend interface", owner: "You", modifiedLabel: "47 min ago", modifiedMinutes: 47, size: "26 KB", icon: "HTML" },
+      { id: 4, name: "system-design-notes.pdf", type: "document", subtype: "Architecture notes", owner: "You", modifiedLabel: "Yesterday", modifiedMinutes: 160, size: "2.1 MB", icon: "PDF" },
+      { id: 5, name: "database-backups", type: "folder", subtype: "Encrypted archive", owner: "You", modifiedLabel: "3 days ago", modifiedMinutes: 520, size: "—", icon: "DIR" }
+    ];
+
+    function iconClass(file) {
+      if (file.type === "folder") return "folder";
+      if (file.name.toLowerCase().endsWith(".pdf")) return "pdf";
+      return "code";
+    }
+
+    function renderFiles() {
+      const query = searchInput.value.trim().toLowerCase();
+      const visibleFiles = files
+        .filter(file => activeFilter === "all" || file.type === activeFilter)
+        .filter(file => file.name.toLowerCase().includes(query))
+        .sort((a, b) => ascending ? a.modifiedMinutes - b.modifiedMinutes : b.modifiedMinutes - a.modifiedMinutes);
+
+      fileList.innerHTML = visibleFiles.map(file => `
+        <article class="file-row" data-id="${file.id}">
+          <div class="file-name">
+            <div class="file-icon ${iconClass(file)}">${file.icon}</div>
+            <div>
+              <strong>${file.name}</strong>
+              <span>${file.subtype}</span>
+            </div>
+          </div>
+          <div class="file-cell file-owner">${file.owner}</div>
+          <div class="file-cell file-date">${file.modifiedLabel}</div>
+          <div class="file-cell file-size">${file.size}</div>
+          <button class="row-action" aria-label="Actions for ${file.name}">•••</button>
+        </article>
+      `).join("");
+
+      resultCount.textContent = `${visibleFiles.length} object${visibleFiles.length === 1 ? "" : "s"}`;
+      emptyState.style.display = visibleFiles.length === 0 ? "block" : "none";
+    }
+
+
+
+
+    const currentUser = {
+      name: "Maruthi Sarath",
+      email: "maruthi@example.com",
+      initials: "MS",
+      userId: "USR-1042",
+      role: "Owner",
+      plan: "Developer",
+      joined: "July 2026",
+      usedStorageGb: 5.7,
+      totalStorageGb: 15
+    };
+
+    //function
+    async function fetchProfile() {
+        try {
+            const response = await fetch('http://localhost:8080/api/profile/1');
+            const data = await response.json();
+            console.log(data);
+            renderProfile(data);
+        } catch (error){
+            console.log.error('Error:', error)
+        }
+    }
+    fetchProfile();
+
+    function renderProfile(user) {
+      document.getElementById("profileButton").textContent = user.userName.split(" ").map(word => word[0]).join("").toUpperCase();
+      document.getElementById("profileInitials").textContent = user.userName.split(" ").map(word => word[0]).join("").toUpperCase();
+      document.getElementById("profileName").textContent = user.userName;
+      document.getElementById("profileStatus").textContent = user.status;
+      document.getElementById("profileEmail").textContent = user.emailId;
+      document.getElementById("profileUserId").textContent = user.userId;
+      document.getElementById("profileRole").textContent = user.role;
+      document.getElementById("profilePlan").textContent = user.plan;
+      document.getElementById("profileJoined").textContent = user.joined;
+      document.getElementById("profileStorage").textContent = `${formatBytes(user.storageUsed)} / ${formatBytes(user.storageLimit)} `;
+      document.getElementById("profileStorage-1").textContent = `${formatBytes(user.storageUsed)} / ${formatBytes(user.storageLimit)}`;
+      document.getElementById("profileStorageBar").style.width = `${Math.min(100, user.storageUsed / user.storageLimit * 100)}%`;
+      document.getElementById("profileStorageBar-1").style.width = `${Math.min(100, user.storageUsed / user.storageLimit * 100)}%`;
+    }
+
+    function formatBytes(bytes, decimals = 2) {
+        if (bytes === 0) return '0 Bytes';
+
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+
+        // Math.log determines which unit index to use based on size
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}
+
+    // Use this when your Spring Boot API is ready.
+    async function loadDynamicData() {
+      try {
+        // const fileResponse = await fetch("/api/files", {
+        //   headers: { Authorization: `Bearer ${localStorage.getItem("jwt")}` }
+        // });
+        // if (!fileResponse.ok) throw new Error("Unable to load files");
+        // files = await fileResponse.json();
+
+        // const profileResponse = await fetch("/api/users/me", {
+        //   headers: { Authorization: `Bearer ${localStorage.getItem("jwt")}` }
+        // });
+        // const user = await profileResponse.json();
+        // renderProfile(user);
+
+        //renderFiles();
+        //renderProfile(currentUser);
+      } catch (error) {
+        console.error(error);
+        emptyState.textContent = "Unable to load data. Please try again.";
+        emptyState.style.display = "block";
+      }
+    }
+
+    function openProfile() {
+
+      profileDrawer.classList.add("open");
+      profileOverlay.classList.add("open");
+      profileDrawer.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeProfile() {
+      profileDrawer.classList.remove("open");
+      profileOverlay.classList.remove("open");
+      profileDrawer.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+    }
+
+    menuButton.addEventListener("click", () => sidebar.classList.toggle("open"));
+    document.querySelectorAll(".nav-item").forEach(item => item.addEventListener("click", () => {
+      document.querySelectorAll(".nav-item").forEach(nav => nav.classList.remove("active"));
+      item.classList.add("active");
+      sidebar.classList.remove("open");
+    }));
+
+    searchInput.addEventListener("input", renderFiles);
+    filters.forEach(filter => filter.addEventListener("click", () => {
+      filters.forEach(button => button.classList.remove("active"));
+      filter.classList.add("active");
+      activeFilter = filter.dataset.filter;
+      renderFiles();
+    }));
+
+    document.getElementById("sortButton").addEventListener("click", event => {
+      ascending = !ascending;
+      event.currentTarget.textContent = ascending ? "Modified ↓" : "Modified ↑";
+      renderFiles();
+    });
+
+    document.getElementById("profileButton").addEventListener("click", openProfile);
+    document.getElementById("closeProfile").addEventListener("click", closeProfile);
+    profileOverlay.addEventListener("click", closeProfile);
+
+    document.getElementById("newButton").addEventListener("click", () => newModal.classList.add("open"));
+    document.getElementById("closeModal").addEventListener("click", () => newModal.classList.remove("open"));
+    newModal.addEventListener("click", event => { if (event.target === newModal) newModal.classList.remove("open"); });
+
+    document.getElementById("uploadButton").addEventListener("click", () => hiddenFileInput.click());
+    hiddenFileInput.addEventListener("change", () => {
+      if (!hiddenFileInput.files.length) return;
+      [...hiddenFileInput.files].forEach((file, index) => files.unshift({
+        id: Date.now() + index,
+        name: file.name,
+        type: file.name.match(/\.(java|js|ts|html|css|py|sql)$/i) ? "code" : "document",
+        subtype: file.type || "Uploaded file",
+        owner: "You",
+        modifiedLabel: "Just now",
+        modifiedMinutes: 0,
+        size: `${Math.max(1, Math.round(file.size / 1024))} KB`,
+        icon: file.name.split(".").pop().slice(0, 4).toUpperCase()
+      }));
+      renderFiles();
+    });
+
+
+    uploadButton.addEventListener("click", () => hiddenFileInput.click());
+    hiddenFileInput.addEventListener("change", async(event) => {
+        const files = event.target.files;
+        if(!files.length) return;
+
+
+        try {
+            await uploadFilesToBackend(files);
+
+            console.log("Upload Complete");
+
+        } catch(error) {
+            console.error("upload failed", error);
+        } finally {
+            hiddenFileInput.value = "";
+        }
+    });
+
+    async function uploadFilesToBackend(files) {
+        //Create a FormData object to format the data for the server
+        const formData = new FormData();
+
+        [...files].forEach((file) => {
+            formData.append("file", file);
+        });
+
+        const response = await fetch("http://localhost:8080/api/drive/data/files/upload", {
+            method: "POST",
+            body: formData,
+        });
+
+        if(!response.ok) {
+            throw new Error('${response.status}');
+        }
+
+        return await response.json();
+    }
+
+
+
+    function openAi() { aiPanel.classList.add("open"); aiFab.style.display = "none"; }
+    function closeAi() { aiPanel.classList.remove("open"); aiFab.style.display = "block"; }
+    aiFab.addEventListener("click", openAi);
+    document.getElementById("closeAi").addEventListener("click", closeAi);
+    document.getElementById("terminalPreview").addEventListener("click", openAi);
+
+    document.addEventListener("keydown", event => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        searchInput.focus();
+      }
+      if (event.key === "Escape") {
+        newModal.classList.remove("open");
+        closeAi();
+        closeProfile();
+        sidebar.classList.remove("open");
+      }
+    });
+
+    loadDynamicData();
+</script>
+</body>
+</html>

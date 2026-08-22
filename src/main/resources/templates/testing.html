@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PencilDrive Login</title>
+
+    <style>
+        :root {
+            --bg: #f4f2ec;
+            --panel: rgba(255, 255, 255, 0.84);
+            --ink: #171a18;
+            --muted: #6e746f;
+            --line: rgba(23, 26, 24, 0.14);
+            --green: #263d2d;
+            --green-hover: #1d3124;
+            --paper: #ebe6db;
+            --brown: #6b4d35;
+            --success: #2e6b42;
+            --error: #a33d34;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            width: 100%;
+            min-height: 100%;
+        }
+
+        body {
+            min-height: 100vh;
+            overflow: hidden;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at 82% 18%, rgba(255,255,255,.95), transparent 32%),
+                linear-gradient(135deg, #e8e5dc 0%, #f7f6f2 48%, #e2dfd6 100%);
+            font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+        }
+
+        .auth-layout {
+            position: relative;
+            display: grid;
+            grid-template-columns: minmax(360px, 42%) 1fr;
+            width: 100%;
+            min-height: 100vh;
+            isolation: isolate;
+        }
+
+        /* LOGIN SIDE */
+        .form-panel {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 42px clamp(24px, 5vw, 76px);
+            background:
+                linear-gradient(90deg, rgba(248,248,245,.98), rgba(248,248,245,.92) 82%, rgba(248,248,245,.28));
+        }
+
+        .form-panel::after {
+            content: "";
+            position: absolute;
+            top: 8%;
+            right: -1px;
+            width: 1px;
+            height: 84%;
+            background: linear-gradient(transparent, rgba(20,25,22,.16), transparent);
+        }
+
+        .form-shell {
+            width: min(430px, 100%);
+        }
+
+        .brand-row {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            margin-bottom: 48px;
+        }
+
+        .brand-symbol {
+            width: 34px;
+            height: 34px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            border: 1px solid rgba(38,61,45,.28);
+        }
+
+        .brand-symbol svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .brand-name {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: -.02em;
+        }
+
+        .card-container {
+            position: relative;
+            width: 100%;
+            height: 520px;
+            overflow: hidden;
+        }
+
+        .form-slider {
+            display: flex;
+            width: 200%;
+            height: 100%;
+            transition: transform .62s cubic-bezier(.22,.75,.2,1);
+        }
+
+        .card-container.show-register .form-slider {
+            transform: translateX(-50%);
+        }
+
+        .auth-form {
+            flex: 0 0 50%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding-right: 4px;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+            font-size: clamp(36px, 4vw, 52px);
+            line-height: 1;
+            letter-spacing: -.05em;
+            font-weight: 720;
+        }
+
+        .form-subtitle {
+            margin-bottom: 30px;
+            color: var(--muted);
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .status-message {
+            display: block;
+            min-height: 22px;
+            margin-bottom: 7px;
+            color: var(--success);
+            font-size: 13px;
+            font-weight: 650;
+        }
+
+        .input-group {
+            margin-bottom: 17px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 7px;
+            color: #3f4541;
+            font-size: 13px;
+            font-weight: 650;
+        }
+
+        .input-wrap {
+            position: relative;
+        }
+
+        .input-wrap svg {
+            position: absolute;
+            top: 50%;
+            left: 15px;
+            width: 18px;
+            height: 18px;
+            transform: translateY(-50%);
+            color: #828882;
+            pointer-events: none;
+        }
+
+        .input-group input {
+            width: 100%;
+            min-height: 52px;
+            padding: 0 16px 0 46px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            outline: none;
+            color: var(--ink);
+            background: rgba(255,255,255,.72);
+            font-size: 15px;
+            transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+        }
+
+        .input-group input:focus {
+            border-color: rgba(38,61,45,.72);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(38,61,45,.08);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin: 1px 0 19px;
+        }
+
+        .checkbox-group input {
+            accent-color: var(--green);
+        }
+
+        .checkbox-group label {
+            color: var(--muted);
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .primary-button {
+            width: 100%;
+            min-height: 52px;
+            border: 0;
+            border-radius: 10px;
+            color: white;
+            background: var(--green);
+            font-size: 15px;
+            font-weight: 720;
+            cursor: pointer;
+            transition: transform .2s ease, background .2s ease, box-shadow .2s ease;
+            box-shadow: 0 0 0 rgba(38,61,45,.15);
+        }
+
+        .primary-button:hover {
+            transform: translateY(-1px);
+            background: var(--green-hover);
+            box-shadow: 0 3px 3px rgba(38,61,45,.20);
+        }
+
+        .switch-text {
+            margin-top: 22px;
+            color: var(--muted);
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .switch-text a {
+            color: var(--ink);
+            font-weight: 750;
+            text-decoration: none;
+        }
+
+        .switch-text a:hover {
+            text-decoration: underline;
+        }
+
+        /* TREE SIDE */
+        .visual-panel {
+            position: relative;
+            min-width: 0;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 52% 30%, rgba(255,255,255,.98), rgba(246,245,240,.92) 45%, rgba(224,221,213,.85) 100%);
+        }
+
+        /* overlap into the center to merge both areas */
+        .visual-panel::before {
+            content: "";
+            position: absolute;
+            z-index: 1;
+            inset: 0;
+            background:
+                linear-gradient(90deg, rgba(248,248,245,.32) 0%, transparent 17%),
+                repeating-linear-gradient(
+                    0deg,
+                    transparent 0,
+                    transparent 31px,
+                    rgba(0,0,0,.018) 32px
+                );
+            pointer-events: none;
+        }
+
+        .tree-stage {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .tree-stage::after {
+            content: "";
+            position: absolute;
+            z-index: 2;
+            left: -12%;
+            right: -8%;
+            bottom: -14%;
+            height: 36%;
+            border-radius: 50% 50% 0 0;
+            background:
+                repeating-linear-gradient(
+                    168deg,
+                    transparent 0 12px,
+                    rgba(17,23,19,.11) 13px,
+                    transparent 14px 22px
+                ),
+                linear-gradient(180deg, rgba(112,118,103,.16), rgba(30,37,31,.28));
+            transform: rotate(-2deg);
+            filter: grayscale(1);
+        }
+
+        .tree-image {
+            position: absolute;
+            z-index: 3;
+            right: clamp(0px, 4vw, 70px);
+            bottom: 1.5%;
+            width: min(690px, 84%);
+            max-height: 96vh;
+            object-fit: contain;
+            object-position: center bottom;
+            mix-blend-mode: multiply;
+            filter: contrast(1.08);
+            transform-origin: 50% 96%;
+            animation: treeSway 7s ease-in-out infinite;
+            user-select: none;
+            pointer-events: none;
+        }
+
+        .leaf {
+            position: absolute;
+            z-index: 5;
+            top: 18%;
+            width: 56px;
+            height: 38px;
+            opacity: 0;
+            transform-origin: center;
+            filter: grayscale(1) contrast(1.15);
+        }
+
+        .leaf svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        /* 3 leaves left, 2 leaves right */
+        .leaf-1 { left: 24%; animation: fallLeftOne 7s linear infinite; }
+        .leaf-2 { left: 31%; animation: fallLeftTwo 7s linear infinite; }
+        .leaf-3 { left: 37%; animation: fallLeftThree 7s linear infinite; }
+        .leaf-4 { right: 28%; animation: fallRightOne 7s linear infinite; }
+        .leaf-5 { right: 20%; animation: fallRightTwo 7s linear infinite; }
+
+        .stored-leaves {
+            position: absolute;
+            z-index: 6;
+            right: clamp(80px, 13vw, 230px);
+            bottom: 4.2%;
+            width: 340px;
+            height: 90px;
+            pointer-events: none;
+        }
+
+        .stored-leaf {
+            position: absolute;
+            width: 92px;
+            height: 56px;
+            opacity: 0;
+            filter: grayscale(1) contrast(1.15);
+        }
+
+        .stored-leaf:nth-child(1) { left: 0; bottom: 4px; transform: rotate(-12deg); animation: storeLeaf1 7s infinite; }
+        .stored-leaf:nth-child(2) { left: 54px; bottom: 9px; transform: rotate(8deg); animation: storeLeaf2 7s infinite; }
+        .stored-leaf:nth-child(3) { left: 112px; bottom: 2px; transform: rotate(-2deg); animation: storeLeaf3 7s infinite; }
+        .stored-leaf:nth-child(4) { left: 170px; bottom: 10px; transform: rotate(14deg); animation: storeLeaf4 7s infinite; }
+        .stored-leaf:nth-child(5) { left: 228px; bottom: 3px; transform: rotate(-8deg); animation: storeLeaf5 7s infinite; }
+
+        .sound-button {
+            position: absolute;
+            z-index: 12;
+            top: 24px;
+            right: 24px;
+            width: 42px;
+            height: 42px;
+            display: grid;
+            place-items: center;
+            border: 1px solid rgba(20,25,22,.16);
+            border-radius: 50%;
+            background: rgba(255,255,255,.66);
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            color: #4e554f;
+        }
+
+        .sound-button svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .sound-button[aria-pressed="true"] {
+            color: #fff;
+            background: var(--green);
+        }
+
+        @keyframes treeSway {
+            0%, 100% { transform: rotate(-.35deg) translateX(-2px); }
+            50% { transform: rotate(.55deg) translateX(3px); }
+        }
+
+        /* Each leaf falls after the previous one reaches the ground. */
+        @keyframes fallLeftOne {
+            0%, 4% { opacity: 0; transform: translate(0, 0) rotate(0deg); }
+            6% { opacity: 1; }
+            18% { opacity: 1; transform: translate(-30px, 310px) rotate(185deg); }
+            19%, 100% { opacity: 0; transform: translate(-38px, 520px) rotate(245deg); }
+        }
+
+        @keyframes fallLeftTwo {
+            0%, 18% { opacity: 0; transform: translate(0,0) rotate(0deg); }
+            20% { opacity: 1; }
+            32% { opacity: 1; transform: translate(35px, 330px) rotate(-190deg); }
+            33%, 100% { opacity: 0; transform: translate(42px, 520px) rotate(-250deg); }
+        }
+
+        @keyframes fallLeftThree {
+            0%, 32% { opacity: 0; transform: translate(0,0) rotate(0deg); }
+            34% { opacity: 1; }
+            46% { opacity: 1; transform: translate(-24px, 350px) rotate(205deg); }
+            47%, 100% { opacity: 0; transform: translate(-32px, 520px) rotate(265deg); }
+        }
+
+        @keyframes fallRightOne {
+            0%, 46% { opacity: 0; transform: translate(0,0) rotate(0deg); }
+            48% { opacity: 1; }
+            60% { opacity: 1; transform: translate(25px, 340px) rotate(-200deg); }
+            61%, 100% { opacity: 0; transform: translate(32px, 520px) rotate(-260deg); }
+        }
+
+        @keyframes fallRightTwo {
+            0%, 60% { opacity: 0; transform: translate(0,0) rotate(0deg); }
+            62% { opacity: 1; }
+            74% { opacity: 1; transform: translate(-28px, 360px) rotate(215deg); }
+            75%, 100% { opacity: 0; transform: translate(-35px, 520px) rotate(275deg); }
+        }
+
+        @keyframes storeLeaf1 {
+            0%, 17% { opacity: 0; }
+            19%, 92% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        @keyframes storeLeaf2 {
+            0%, 31% { opacity: 0; }
+            33%, 92% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        @keyframes storeLeaf3 {
+            0%, 45% { opacity: 0; }
+            47%, 92% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        @keyframes storeLeaf4 {
+            0%, 59% { opacity: 0; }
+            61%, 92% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        @keyframes storeLeaf5 {
+            0%, 73% { opacity: 0; }
+            75%, 92% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        @media (max-width: 920px) {
+            body {
+                overflow: auto;
+            }
+
+            .auth-layout {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 48vh;
+            }
+
+            .form-panel {
+                padding: 32px 22px 18px;
+                background: rgba(248,248,245,.98);
+            }
+
+            .form-panel::after {
+                display: none;
+            }
+
+            .brand-row {
+                margin-bottom: 20px;
+            }
+
+            .card-container {
+                height: 500px;
+            }
+
+            .visual-panel {
+                min-height: 400px;
+            }
+
+            .tree-image {
+                right: 50%;
+                width: min(520px, 88%);
+                max-height: 47vh;
+                transform: translateX(50%);
+            }
+
+            @keyframes treeSway {
+                0%, 100% { transform: translateX(50%) rotate(-.35deg); }
+                50% { transform: translateX(50%) rotate(.55deg); }
+            }
+
+            .stored-leaves {
+                right: 50%;
+                transform: translateX(50%);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .tree-image,
+            .leaf,
+            .stored-leaf {
+                animation: none !important;
+            }
+
+            .stored-leaf {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<main class="auth-layout">
+
+    <!-- LEFT: FORM ONLY -->
+    <section class="form-panel">
+        <div class="form-shell">
+
+            <div class="brand-row">
+                <div class="brand-symbol" aria-hidden="true">
+                    <svg viewBox="0 0 32 32" fill="none">
+                        <path d="M16 27V12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                        <path d="M16 18C11 15.5 8.7 11.8 9 7C13.6 7.2 16 10 16 14.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                        <path d="M16 19C21 16.5 23.3 12.8 23 8C18.4 8.2 16 11 16 15.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                        <path d="M10 27H22" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <span class="brand-name">PencilDrive</span>
+            </div>
+
+            <div class="card-container" id="cardContainer">
+                <div class="form-slider">
+
+                    <!-- LOGIN FORM -->
+                    <form class="auth-form" id="loginForm" onsubmit="event.preventDefault();">
+                        <h1>Welcome back</h1>
+                        <p class="form-subtitle">Sign in to continue to your drive.</p>
+
+                        <span class="status-message" id="spamLogin"></span>
+
+                        <div class="input-group">
+                            <label for="loginEmail">Email</label>
+                            <div class="input-wrap">
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M4 6H20V18H4V6Z" stroke="currentColor" stroke-width="1.7"/>
+                                    <path d="M4.5 7L12 13L19.5 7" stroke="currentColor" stroke-width="1.7"/>
+                                </svg>
+                                <input type="email" id="loginEmail" required autocomplete="email" placeholder="you@example.com">
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="loginPassword">Password</label>
+                            <div class="input-wrap">
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.7"/>
+                                    <path d="M8 10V7.5C8 5.01472 9.79086 3 12 3C14.2091 3 16 5.01472 16 7.5V10" stroke="currentColor" stroke-width="1.7"/>
+                                </svg>
+                                <input type="password" id="loginPassword" required autocomplete="current-password" placeholder="Enter your password">
+                            </div>
+                        </div>
+
+                        <button class="primary-button" type="submit">Sign In</button>
+
+                        <p class="switch-text">
+                            Don't have an account? <a href="#" id="toRegister">Register</a>
+                        </p>
+                    </form>
+
+                    <!-- REGISTER FORM -->
+                    <form class="auth-form" id="registerForm" onsubmit="event.preventDefault();">
+                        <h1>Create account</h1>
+                        <p class="form-subtitle">Register to access PencilDrive.</p>
+
+                        <span class="status-message" id="spamReg"></span>
+
+                        <div class="input-group">
+                            <label for="regName">Full Name</label>
+                            <div class="input-wrap">
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.7"/>
+                                    <path d="M5 21C5 16.8 8 14 12 14C16 14 19 16.8 19 21" stroke="currentColor" stroke-width="1.7"/>
+                                </svg>
+                                <input type="text" id="regName" required autocomplete="name" placeholder="John Doe">
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="regEmail">Email</label>
+                            <div class="input-wrap">
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M4 6H20V18H4V6Z" stroke="currentColor" stroke-width="1.7"/>
+                                    <path d="M4.5 7L12 13L19.5 7" stroke="currentColor" stroke-width="1.7"/>
+                                </svg>
+                                <input type="email" id="regEmail" required autocomplete="email" placeholder="you@example.com">
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="regPassword">Password</label>
+                            <div class="input-wrap">
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.7"/>
+                                    <path d="M8 10V7.5C8 5.01472 9.79086 3 12 3C14.2091 3 16 5.01472 16 7.5V10" stroke="currentColor" stroke-width="1.7"/>
+                                </svg>
+                                <input type="password" id="regPassword" required autocomplete="new-password" placeholder="Create a password">
+                            </div>
+                        </div>
+
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="I Agree">
+                            <label for="I Agree">I Agree to terms & Conditions</label>
+                        </div>
+
+                        <button class="primary-button" type="submit">Create Account</button>
+
+                        <p class="switch-text">
+                            Already have an account? <a href="#" id="toLogin">Login</a>
+                        </p>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- RIGHT: ONE MERGED BLACK-AND-WHITE SKETCH -->
+    <section class="visual-panel" aria-label="PencilDrive tree">
+        <button class="sound-button" id="soundButton" type="button" aria-pressed="false" title="Toggle leaf sound">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M4 9V15H8L13 19V5L8 9H4Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                <path d="M16 9C17.2 10.2 17.2 13.8 16 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                <path d="M19 6.5C22 9.5 22 14.5 19 17.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+        </button>
+
+        <div class="tree-stage">
+            <img class="tree-image" src="">
+
+            <!-- Three leaves fall on the left -->
+            <div class="leaf leaf-1"><svg viewBox="0 0 90 58" fill="none"><path d="M8 46C26 14 57 8 82 15C68 37 42 50 8 46Z" fill="#766a5c"/><path d="M8 46C28 37 52 25 82 15" stroke="#262626" stroke-width="2.4"/><path d="M24 39L18 25M34 34L31 18M45 29L45 14M57 24L61 13M68 20L72 15" stroke="#333" stroke-width="1.3"/><path d="M8 46L2 54" stroke="#222" stroke-width="3"/></svg></div>
+            <div class="leaf leaf-2"><svg viewBox="0 0 90 58" fill="none"><path d="M8 46C26 14 57 8 82 15C68 37 42 50 8 46Z" fill="#766a5c"/><path d="M8 46C28 37 52 25 82 15" stroke="#262626" stroke-width="2.4"/><path d="M24 39L18 25M34 34L31 18M45 29L45 14M57 24L61 13M68 20L72 15" stroke="#333" stroke-width="1.3"/><path d="M8 46L2 54" stroke="#222" stroke-width="3"/></svg></div>
+            <div class="leaf leaf-3"><svg viewBox="0 0 90 58" fill="none"><path d="M8 46C26 14 57 8 82 15C68 37 42 50 8 46Z" fill="#766a5c"/><path d="M8 46C28 37 52 25 82 15" stroke="#262626" stroke-width="2.4"/><path d="M24 39L18 25M34 34L31 18M45 29L45 14M57 24L61 13M68 20L72 15" stroke="#333" stroke-width="1.3"/><path d="M8 46L2 54" stroke="#222" stroke-width="3"/></svg></div>
+
+            <!-- Two leaves fall on the right -->
+            <div class="leaf leaf-4"><svg viewBox="0 0 90 58" fill="none"><path d="M8 46C26 14 57 8 82 15C68 37 42 50 8 46Z" fill="#766a5c"/><path d="M8 46C28 37 52 25 82 15" stroke="#262626" stroke-width="2.4"/><path d="M24 39L18 25M34 34L31 18M45 29L45 14M57 24L61 13M68 20L72 15" stroke="#333" stroke-width="1.3"/><path d="M8 46L2 54" stroke="#222" stroke-width="3"/></svg></div>
+            <div class="leaf leaf-5"><svg viewBox="0 0 90 58" fill="none"><path d="M8 46C26 14 57 8 82 15C68 37 42 50 8 46Z" fill="#766a5c"/><path d="M8 46C28 37 52 25 82 15" stroke="#262626" stroke-width="2.4"/><path d="M24 39L18 25M34 34L31 18M45 29L45 14M57 24L61 13M68 20L72 15" stroke="#333" stroke-width="1.3"/><path d="M8 46L2 54" stroke="#222" stroke-width="3"/></svg></div>
+
+            <!-- The five leaves remain stored at the bottom until the cycle resets -->
+            <div class="stored-leaves" aria-hidden="true">
+                <div class="stored-leaf"><svg viewBox="0 0 90 58" fill="none"><path d="M8 46C26 14 57 8 82 15C68 37 42 50 8 46Z" fill="#7b7062"/><path d="M8 46C28 37 52 25 82 15" stroke="#202020" stroke-width="2.4"/><path d="M24 39L18 25M34 34L31 18M45 29L45 14M57 24L61 13M68 20L72 15" stroke="#333" stroke-width="1.3"/><path d="M8 46L2 54" stroke="#222" stroke-width="3"/></svg></div><div class="stored-leaf"><svg viewBox="0 0 90 58" fill="none"><path d="M8 46C26 14 57 8 82 15C68 37 42 50 8 46Z" fill="#7b7062"/><path d="M8 46C28 37 52 25 82 15" stroke="#202020" stroke-width="2.4"/><path d="M24 39L18 25M34 34L31 18M45 29L45 14M57 24L61 13M68 20L72 15" stroke="#333" stroke-width="1.3"/><path d="M8 46L2 54" stroke="#222" stroke-width="3"/></svg></div><div class="stored-leaf"><svg viewBox="0 0 90 58" fill="none"><path d="M8 46C26 14 57 8 82 15C68 37 42 50 8 46Z" fill="#7b7062"/><path d="M8 46C28 37 52 25 82 15" stroke="#202020" stroke-width="2.4"/><path d="M24 39L18 25M34 34L31 18M45 29L45 14M57 24L61 13M68 20L72 15" stroke="#333" stroke-width="1.3"/><path d="M8 46L2 54" stroke="#222" stroke-width="3"/></svg></div><div class="stored-leaf"><svg viewBox="0 0 90 58" fill="none"><path d="M8 46C26 14 57 8 82 15C68 37 42 50 8 46Z" fill="#7b7062"/><path d="M8 46C28 37 52 25 82 15" stroke="#202020" stroke-width="2.4"/><path d="M24 39L18 25M34 34L31 18M45 29L45 14M57 24L61 13M68 20L72 15" stroke="#333" stroke-width="1.3"/><path d="M8 46L2 54" stroke="#222" stroke-width="3"/></svg></div><div class="stored-leaf"><svg viewBox="0 0 90 58" fill="none"><path d="M8 46C26 14 57 8 82 15C68 37 42 50 8 46Z" fill="#7b7062"/><path d="M8 46C28 37 52 25 82 15" stroke="#202020" stroke-width="2.4"/><path d="M24 39L18 25M34 34L31 18M45 29L45 14M57 24L61 13M68 20L72 15" stroke="#333" stroke-width="1.3"/><path d="M8 46L2 54" stroke="#222" stroke-width="3"/></svg></div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<script>
+    const cardContainer = document.getElementById('cardContainer');
+    const toRegister = document.getElementById('toRegister');
+    const toLogin = document.getElementById('toLogin');
+
+    // Slide to Register (shifts content left)
+    toRegister.addEventListener('click', (e) => {
+        e.preventDefault();
+        cardContainer.classList.add('show-register');
+    });
+
+    // Slide back to Login (shifts content right)
+    toLogin.addEventListener('click', (e) => {
+        e.preventDefault();
+        cardContainer.classList.remove('show-register');
+    });
+
+
+
+    document.getElementById("loginForm").addEventListener('submit', function(e) {
+        e.preventDefault(); // stop the form from submitting the 'standard' way
+
+        const data = {
+            email: document.getElementById("loginEmail").value,
+            password: document.getElementById("loginPassword").value
+        };
+
+        fetch('http://localhost:8080/api/auth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }, body: JSON.stringify(data)   //convert object to JSON string
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById("spamLogin").innerText= "Registration successful! Redirecting to PencilDrive...";
+                    window.location.href = "/api/drive";
+
+                } else {
+                    //handle login failure
+                    //alert(data.message);
+                    document.getElementById("spamLogin").innerText = data.message;
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    });
+
+
+    document.getElementById("registerForm").addEventListener('submit', function(e) {
+        e.preventDefault(); // stop the form from submitting the 'standard' way
+
+        const data = {
+            userId: document.getElementById("regName").value,
+            email: document.getElementById("regEmail").value,
+            password: document.getElementById("regPassword").value
+        };
+
+        fetch('http://localhost:8080/api/auth/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }, body: JSON.stringify(data)   //convert object to JSON string
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById("spamReg").innerText = "redirecting to login page";
+                    // 5. REMOVE the class to slide back to the login form
+                    cardContainer.classList.remove('show-register');
+
+                    // Optional: Clear the registration inputs after switching
+                    registerForm.reset();
+
+                } else {
+                    //handle login failure
+                    //alert(data.message);
+                    document.getElementById("spamReg").innerText = data.message;
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    });
+</script>
+
+<!-- Optional generated wind/leaf sound. Browser starts it only after the user presses the sound button. -->
+<script>
+    const soundButton = document.getElementById("soundButton");
+    let audioContext = null;
+    let noiseSource = null;
+    let noiseGain = null;
+
+    function startLeafSound() {
+        audioContext = audioContext || new (window.AudioContext || window.webkitAudioContext)();
+
+        const bufferLength = audioContext.sampleRate * 3;
+        const buffer = audioContext.createBuffer(1, bufferLength, audioContext.sampleRate);
+        const data = buffer.getChannelData(0);
+
+        for (let i = 0; i < bufferLength; i++) {
+            data[i] = (Math.random() * 2 - 1) * 0.32;
+        }
+
+        noiseSource = audioContext.createBufferSource();
+        noiseSource.buffer = buffer;
+        noiseSource.loop = true;
+
+        const filter = audioContext.createBiquadFilter();
+        filter.type = "bandpass";
+        filter.frequency.value = 1250;
+        filter.Q.value = 0.55;
+
+        noiseGain = audioContext.createGain();
+        noiseGain.gain.value = 0.028;
+
+        noiseSource.connect(filter);
+        filter.connect(noiseGain);
+        noiseGain.connect(audioContext.destination);
+        noiseSource.start();
+    }
+
+    function stopLeafSound() {
+        if (noiseSource) {
+            noiseSource.stop();
+            noiseSource.disconnect();
+            noiseSource = null;
+        }
+    }
+
+    soundButton.addEventListener("click", async () => {
+        const isOn = soundButton.getAttribute("aria-pressed") === "true";
+
+        if (isOn) {
+            stopLeafSound();
+            soundButton.setAttribute("aria-pressed", "false");
+        } else {
+            startLeafSound();
+            if (audioContext && audioContext.state === "suspended") {
+                await audioContext.resume();
+            }
+            soundButton.setAttribute("aria-pressed", "true");
+        }
+    });
+</script>
+</body>
+</html>
