@@ -10,9 +10,12 @@ import com.vanam.pencildrive.repo.FileGroupPermissionsRepo;
 import com.vanam.pencildrive.repo.FileMetadataRepo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.UUID;
 
 
 /**
@@ -49,7 +52,7 @@ public class PermissionService {
 
 
     //<------------------------------------| Adding Existing File into the Group |------------------------------------>
-    public boolean addFile(Groups groupId, FilesMetadata file, User ownerId) {
+    public boolean shareFileWithGroup(Groups groupId, UUID file, User owner) {
 
         /** 1. Check Whether File is Empty. */
         if(file == null) {
@@ -62,42 +65,44 @@ public class PermissionService {
         Optional<FilesMetadata> verifiedFile = null;
         try {
             verifiedFile =
-                    fileMetadataRepo.findByOwnerIdAndIdAndStatus(file, ownerId, FileStatus.READY);
+                    fileMetadataRepo.findByPublicIdAndOwnerIdAndStatus(file, owner.getId(), FileStatus.READY);
 
             if(verifiedFile.isEmpty()) { return false; }
 
         } catch(RuntimeException e) {
-            if(e instanceof org.springframework.dao.DataAccessException) {
-                log.error("Confirmed: This is a database error ! -> Class : PermissionService.addFile.Line -> no.65");
+            if(e instanceof org.springframework.dao.DataAccessException ) {
+                log.error("Confirmed: This is a database error ! -> Class : PermissionService.addFile.Line -> no.65" + e.toString());
             } else {
                 log.warn(
-                        ownerId + " " +file.getId() + " " +groupId.getId() + " Doesn't match, Cause Malicious attempt" +
-                        "Malicous Activity detected" + e.toString() + "" + ownerId + "" +
+                        owner + " " +file + " " +groupId.getId() + " Doesn't match, Cause Malicious attempt" +
+                        "Malicous Activity detected" + e.toString() + "" + owner + "" +
                         "User Doesn't Have Any permission to perform this task {PermissionService/addFile}");
             }
             return false;
         }
 
-        /** 3. Create Instance Of FileGroupPermissions Class*/
+        /** 3. Create Instance Of FileGroupPermissions Class*/ 
         FileGroupPermissions pendingFileGroupPermission =
-                FileGroupPermissions.createdUploading(
+                FileGroupPermissions.Create(
                         verifiedFile.get(),
                         groupId,
                         15,
-                        ownerId
+                        owner
                 );
 
         /** 4. Save And Flush Object*/
         try {
             fileGroupPermissionsRepo.saveAndFlush(pendingFileGroupPermission);
+        } catch (DataIntegrityViolationException e) {
+            log.info("Idempotent resolution: File {} is already shared with Group {}", file, groupId.getId());
+            return true;
+        } catch (DataAccessException e) {
+            log.error("Confirmed: This is a database error ! -> Class : PermissionService.addFile.Line -> no.65");
+            return false;
         } catch (RuntimeException e) {
-            if(e instanceof org.springframework.dao.DataAccessException) {
-                log.error("Confirmed: This is a database error ! -> Class : PermissionService.addFile.Line -> no.65");
-            } else {
-                log.warn(
-                        ownerId + " " +file.getId() + " " +groupId.getId() + " Doesn't match, Cause Malicious attempt"
-                        + "Malicous Activity detected");
-            }
+            log.warn(
+                    owner + " " +file + " " +groupId.getId() + " Doesn't match, Cause Malicious attempt"
+                            + "Malicous Activity detected");
             return false;
         }
         return true;

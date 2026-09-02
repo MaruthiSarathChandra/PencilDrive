@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.util.List;
+import java.util.UUID;
 
 public record CreateGroupRequest(
         @NotBlank(message = "Group name cannot be empty")
@@ -16,7 +17,7 @@ public record CreateGroupRequest(
         @Size(max = 4, message = "You can reached max members at a time")
         List<@Valid GroupMembersRequest> members,
 
-        FilesMetadata file
+        UUID file
 ) {
 
 }

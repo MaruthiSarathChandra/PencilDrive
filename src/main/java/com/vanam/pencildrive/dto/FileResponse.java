@@ -5,6 +5,7 @@ import com.vanam.pencildrive.domain.FilesMetadata;
 import com.vanam.pencildrive.enums.FileStatus;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record FileResponse(
@@ -19,7 +20,8 @@ public record FileResponse(
         Long sizeBytes,
         FileStatus status,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+        UUID publicId
 ) {
 
 
@@ -34,7 +36,8 @@ public record FileResponse(
                 file.getSizeBytes(),
                 file.getStatus(),
                 file.getCreatedAt(),
-                file.getUpdatedAt()
+                file.getUpdatedAt(),
+                file.getPublicId()
         );
     }
 
@@ -49,7 +52,8 @@ public record FileResponse(
                 file.getSizeBytes(),
                 file.getStatus(),
                 file.getCreatedAt(),
-                file.getUpdatedAt()
+                file.getUpdatedAt(),
+                file.getPublicId()
         );
     }
 }
