@@ -1,5 +1,6 @@
 package com.vanam.pencildrive.Config;
 import com.vanam.pencildrive.security.JwtAuthenticationFilter;
+import jakarta.servlet.DispatcherType;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -30,15 +31,45 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
+
                 .authorizeHttpRequests(auth -> auth
+                        // Allow Spring to process internal error dispatches
+                        .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
+
                         .requestMatchers("/api/auth/register",
                                 "/api/auth/login",
                                 "/api/login", "/static/**").permitAll()
                         .anyRequest().authenticated()
                 ).exceptionHandling(ex-> ex
                         .authenticationEntryPoint(((request, response, authException) -> {
-                            response.sendRedirect("/api/login");
+                                response.setStatus(401);
+                                response.setContentType("application/json");
+
+                                response.getWriter().write("""
+                                        { 
+                                        "status": 401,
+                                        "error": "UNAUTHORIZED",
+                                        "message": "Authentication required"
+                                        }
+                                        """);
                         }))
+
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setStatus(403);
+                            response.setContentType("application/json");
+
+                            response.getWriter().write("""
+                                    {
+                                    "status": 403,
+                                    "error": "FORBIDDEN",
+                                    "message": "Access denied"
+                                    }
+                                    """);
+                        })
+
+                        /*.authenticationEntryPoint(((request, response, authException) -> {
+                            response.sendRedirect("/api/login");
+                        }))*/
                 )
                 .formLogin(form -> form.disable())
                 .httpBasic(basic -> basic.disable())

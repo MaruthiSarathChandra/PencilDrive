@@ -5,15 +5,24 @@ import com.vanam.pencildrive.domain.User;
 import com.vanam.pencildrive.domain.User;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 import javax.swing.*;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(
         name = "files_groups",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_group_owner_name",
+                        columnNames = {"owner_id","group_name"}
+                )
+        },
         indexes = {
-                @Index(name = "idx_groups_owner", columnList = "owner_id")
+                @Index(name = "idx_groups_owner", columnList = "owner_id"),
         }
 )
 public class Groups {
@@ -22,9 +31,9 @@ public class Groups {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "owner_id", nullable = false)
-    private User userId;
+    private User owner;
 
     @Column(name = "group_name", nullable = false)
     private String groupName;
@@ -33,12 +42,19 @@ public class Groups {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "public_group_id", nullable = false, unique = true)
+    private UUID publicGroupId;
+
+
+    protected Groups() {}
+
     public Groups(
-            User userId,
+            User owner,
             String groupName
     ) {
-        this.userId = userId;
+        this.owner = owner;
         this.groupName = groupName;
+        this.publicGroupId = UUID.randomUUID();
     }
 
     public static Groups createGroup(
@@ -57,9 +73,11 @@ public class Groups {
 
     public Long getId() { return id; }
 
-    public User getUserId() { return userId; }
+    public User getOwner() { return owner; }
 
     public String getGroupName() { return groupName; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
+
+    public UUID getPublicGroupId() { return publicGroupId; }
 }

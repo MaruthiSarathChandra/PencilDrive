@@ -19,7 +19,7 @@ public class FileGroupPermissions {
 
         /*
         * Id
-        * FileId
+        * file
         * GroupId
         * UserId
         * PermissionBits
@@ -34,9 +34,9 @@ public class FileGroupPermissions {
 
         @ManyToOne(fetch = FetchType.LAZY, optional = false)
         @JoinColumn(name = "file_id", nullable = false)
-        private FilesMetadata fileId;
+        private FilesMetadata file;
 
-        @ManyToOne
+        @ManyToOne(fetch = FetchType.LAZY, optional = false)
         @JoinColumn(name = "group_id", nullable = false)
         private Groups groupId;
 
@@ -51,28 +51,28 @@ public class FileGroupPermissions {
         @Column(name = "created_at", nullable = false)
         private LocalDateTime createdAt;
 
-
+        protected FileGroupPermissions() {}
 
         public FileGroupPermissions(
-                FilesMetadata fileId,
+                FilesMetadata file,
                 Groups groupId,
                 Integer permissionBits,
                 User createdBy
         ) {
-                this.fileId = fileId;
+                this.file = file;
                 this.groupId = groupId;
                 this.permissionBits = permissionBits;
                 this.createdBy = createdBy;
         }
 
-        public static FileGroupPermissions createdUploading(
-                FilesMetadata fileId,
+        public static FileGroupPermissions Create(
+                FilesMetadata file,
                 Groups groupId,
                 Integer permissionBits,
                 User createdBy
         ){
                 return new FileGroupPermissions(
-                        fileId,
+                        file,
                         groupId,
                         permissionBits,
                         createdBy
@@ -88,7 +88,7 @@ public class FileGroupPermissions {
 
         //Getter
         public Long getId() { return id; }
-        public FilesMetadata getFileId() { return fileId; }
+        public FilesMetadata getfile() { return file; }
         public Groups getGroupId() { return groupId; }
         public Integer getPermissionBits() { return permissionBits; }
         public User getCreatedBy() { return createdBy; }

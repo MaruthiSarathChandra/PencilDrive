@@ -21,6 +21,7 @@ public interface GroupMemberRepo
         SELECT gm.userId.emailId 
         FROM GroupMembers gm 
         WHERE gm.groupId = :group
+        AND gm.userId.emailId IN :emails
         """)
-    List<String> findEmailsByGroup(@Param("group") Groups group);
+    List<String> findEmailsByEmails(@Param("group") Groups group, List<String> emails);
 }

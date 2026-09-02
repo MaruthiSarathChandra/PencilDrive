@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
         name = "group_members",
         indexes = {
                 @Index(name = "idx_group_members_user_group_unique", columnList = "user_id,group_id", unique = true),
-                @Index(name = "idx_group_members_group_user", columnList = "user_id")
+                @Index(name = "idx_group_members_group_user", columnList = "group_id, user_id")
         }
 )
 public class GroupMembers {
@@ -22,7 +22,7 @@ public class GroupMembers {
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         private Long id;
 
-        @ManyToOne
+        @ManyToOne(fetch = FetchType.LAZY, optional = false)
         @JoinColumn(name = "user_id", nullable = false)
         private User userId;
 
@@ -30,12 +30,14 @@ public class GroupMembers {
         @JoinColumn(name = "group_id", nullable = false)
         private Groups groupId;
 
+        @Enumerated(EnumType.STRING)
         @Column(name = "role", nullable = false)
         private GroupRole role;
         @CreationTimestamp
         @Column(name = "created_at", nullable = false)
         private LocalDateTime createdAt;
 
+        protected GroupMembers() {}
 
         public GroupMembers(
                 User userId,

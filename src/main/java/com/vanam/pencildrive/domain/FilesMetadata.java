@@ -7,6 +7,7 @@ import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 
 @Entity
@@ -62,6 +63,9 @@ public class FilesMetadata {
     @Column(name = "status", nullable = false)
     private FileStatus status;
 
+    @Column(name = "public_id", nullable = false, unique = true, updatable = false)
+    private UUID publicId;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -89,6 +93,7 @@ public class FilesMetadata {
         this.sizeBytes = sizeBytes;
         this.storageKey = storageKey;
         this.status = FileStatus.UPLOADING;
+        this.publicId = UUID.randomUUID();
     }
 
     public static FilesMetadata createUploading(
@@ -169,4 +174,5 @@ public class FilesMetadata {
     public LocalDateTime getCreatedAt() { return createdAt; }
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public UUID getPublicId() { return publicId; }
 }

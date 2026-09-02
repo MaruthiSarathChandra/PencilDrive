@@ -64,7 +64,7 @@ public class DriverApiController {
     }
 
     @PostMapping("/create-group")
-    public ResponseEntity<GroupResponse> createGroup(@RequestBody CreateGroupRequest createGroupRequest) {
+    public ResponseEntity<CreateGroupResponse> createGroup(@RequestBody CreateGroupRequest createGroupRequest) {
         return ResponseEntity.ok(groupService.createGroup(createGroupRequest));
     }
 

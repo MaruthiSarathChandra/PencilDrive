@@ -18,7 +18,7 @@ public interface LoginRepo extends JpaRepository<User, Long> {
 
     Optional<User> findByEmailId(String emailId);
     Optional<User> findUserByEmailIdAndStatus(String emailId, AccountStatus status);
-     List<User> findUserByEmailIdInAndStatus(List<String> emailIds, AccountStatus Status);
+    List<User> findUserByEmailIdInAndStatus(List<String> emailIds, AccountStatus Status);
 
     @Query("""
         SELECT u.id

@@ -1,11 +1,12 @@
 package com.vanam.pencildrive.service;
+import com.vanam.pencildrive.CustomException.GroupAlreadyExistsException;
+import com.vanam.pencildrive.CustomException.GroupMemberAlreadyExistsException;
 import com.vanam.pencildrive.domain.FilesMetadata;
 import com.vanam.pencildrive.domain.GroupMembers;
 import com.vanam.pencildrive.domain.Groups;
 import com.vanam.pencildrive.domain.User;
-import com.vanam.pencildrive.dto.CreateGroupRequest;
-import com.vanam.pencildrive.dto.GroupResponse;
-import com.vanam.pencildrive.dto.MessageResponse;
+import com.vanam.pencildrive.dto.*;
+import com.vanam.pencildrive.enums.GroupRole;
 import com.vanam.pencildrive.repo.FileMetadataRepo;
 import com.vanam.pencildrive.repo.GroupsRepo;
 import com.vanam.pencildrive.repo.LoginRepo;
@@ -15,6 +16,7 @@ import jakarta.persistence.Id;
 import org.hibernate.jdbc.Expectation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -72,18 +74,21 @@ public class GroupService {
         this.transactionTemplate = transactionTemplate;
     }
 
-    public GroupResponse createGroup(CreateGroupRequest request) {
-
+    public CreateGroupResponse createGroup(CreateGroupRequest request) {
 
         //<--------------------> | 1. Owner Verification | <------------------------>
-        Optional<User> ownerId =
+        Optional<User> owner =
                 currentUserService.requireCurrentUserObject();
 
-        if(ownerId.isEmpty()) {
+        if(owner.isEmpty()) {
             log.error("Querying Error: User not for email" + currentUserService.getCurrentUserEmail());
-            return GroupResponse.message("something went wrong while creating group");
+            return CreateGroupResponse.message("something went wrong while creating group");
         }
 
+
+        if(groupsRepo.existsByOwner_IdAndGroupName(owner.get().getId(), request.groupName()) == true) {
+            return CreateGroupResponse.message("GroupName Already Exists");
+        }
 
 
         GroupCreationResult creationResult = transactionTemplate.execute( status -> {
@@ -91,16 +96,21 @@ public class GroupService {
 
                 /** 1. Creating Groups Object , State Pending**/
                 Groups pendingGroup = Groups.createGroup
-                        (ownerId.get(), request.groupName());
-
+                        (owner.get(), request.groupName());
 
                 return new GroupCreationResult(
                         /** 2.Save Pending Group and Flush */
-                        groupsRepo.save(pendingGroup),
+                        groupsRepo.saveAndFlush(pendingGroup),
                         /** 3. Calling for Creation Of Group Members */
-                        groupMemberService.create(request.members(), pendingGroup)
+                        groupMemberService.create(request.members(), pendingGroup, owner.get())
                 );
-            } catch (Exception e) {
+            } catch (GroupMemberAlreadyExistsException e) {
+                throw e;
+
+            }catch (RuntimeException e) {
+                if(e instanceof DataIntegrityViolationException) {
+                    throw new GroupAlreadyExistsException("Group Already Exists");
+                }
                 status.setRollbackOnly();
                 log.error("Transaction failed, rolling back Group and Members: {}", e.getMessage());
                 throw new RuntimeException("Failed to create group and members", e);
@@ -110,22 +120,32 @@ public class GroupService {
 
         /** 4. Calling for Creation Of Group Members */
         if(request.file() != null) {
-            if(permissionService.addFile(
+            if(permissionService.shareFileWithGroup(
                     creationResult.group,
                     request.file(),
-                    ownerId.get()) == true) {
+                    owner.get()) == true) {
 
-                return new GroupResponse("Success",
-                        creationResult.group,
-                        creationResult.members,
+                return new CreateGroupResponse("Success",
+                        new GroupResponse(creationResult.group.getPublicGroupId(), creationResult.group.getGroupName()),
+                        creationResult
+                                .members.stream()
+                                .map(member ->
+                                        new GroupMembersResponse(
+                                                        member.getUserId().getEmailId(),
+                                                        member.getRole())
+                                ).toList(),
                         request.file());
             }
         }
-        return GroupResponse
+        return CreateGroupResponse
                 .createGroupWithGroupMembers(
                         "Success",
-                        creationResult.group,
-                        creationResult.members
+                        new GroupResponse(creationResult.group.getPublicGroupId(), creationResult.group.getGroupName()),
+                        creationResult.members.stream()
+                                .map(member ->
+                                        new GroupMembersResponse(
+                                                member.getUserId().getEmailId(),
+                                                member.getRole())).toList()
                 );
     }
 
