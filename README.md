@@ -1,0 +1,2 @@
+PencilDrive uses a layered Spring Boot architecture separating authentication, file metadata/storage, group membership, and permission management. Transactional services and database constraints protect concurrent group operations, while paginated read APIs are validated through k6 load and concurrency testing.
+<img width="5226" height="6122" alt="diagram" src="https://github.com/user-attachments/assets/08393191-ef7a-4181-a51e-8a65d558a5c0" />
