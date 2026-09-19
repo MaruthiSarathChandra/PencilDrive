@@ -3,20 +3,21 @@ import com.vanam.pencildrive.CustomException.GroupMemberAlreadyExistsException;
 import com.vanam.pencildrive.domain.GroupMembers;
 import com.vanam.pencildrive.domain.Groups;
 import com.vanam.pencildrive.domain.User;
+import com.vanam.pencildrive.dto.GetGroupMembersResponse;
 import com.vanam.pencildrive.dto.GroupMembersRequest;
 import com.vanam.pencildrive.enums.AccountStatus;
-import com.vanam.pencildrive.enums.GroupRole;
 import com.vanam.pencildrive.repo.GroupMemberRepo;
+import com.vanam.pencildrive.repo.GroupsRepo;
 import com.vanam.pencildrive.repo.LoginRepo;
+import com.vanam.pencildrive.security.CurrentUserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.data.web.SpringDataWebProperties;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.DuplicateKeyException;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
+
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -27,13 +28,19 @@ public class GroupMemberService {
     private static final Logger log = LoggerFactory.getLogger(GroupMemberService.class);
     private final GroupMemberRepo groupMemberRepo;
     private final LoginRepo loginRepo;
+    private final CurrentUserService currentUserService;
+    private final GroupsRepo groupsRepo;
 
     public GroupMemberService(
             GroupMemberRepo groupMemberRepo,
-            LoginRepo loginRepo
+            LoginRepo loginRepo,
+            CurrentUserService currentUserService,
+            GroupsRepo groupsRepo
     ) {
         this.groupMemberRepo = groupMemberRepo;
         this.loginRepo = loginRepo;
+        this.currentUserService = currentUserService;
+        this.groupsRepo = groupsRepo;
     }
 
 
@@ -81,7 +88,7 @@ public class GroupMemberService {
 
 
         HashSet<String> existingGroupMembers =
-                new HashSet<>(groupMemberRepo.findEmailsByEmails(group, membersEmailsList));
+                new HashSet<>(groupMemberRepo.findEmailsByEmailsAndGroup(group, membersEmailsList));
 
 
         ////<--------------------> |Final Members List For Creation and Invitation| <------------------------>
@@ -99,7 +106,7 @@ public class GroupMemberService {
         if(pendingMembersToSave.isEmpty()) {
             log.error(" GroupMemberService Error : " +
                     "Line 37 : Failed to create List<?> membersToSave");
-            throw new RuntimeException("SomeThing went Wrong");
+            throw new RuntimeException("SomeThing Went Wrong");
         }
 
 
@@ -114,5 +121,53 @@ public class GroupMemberService {
             log.error("Failed to save entity objects" + e.toString() + e.getCause());
             throw new RuntimeException(e.toString());
         }
+    }
+
+
+    /**
+     * Read Operation
+     */
+    @Transactional(readOnly = true)
+    public GetGroupMembersResponse getGroupMembers(
+            UUID publicGroupId, int page, int pageSize) {
+
+        if (page < 0) {
+            throw new IllegalArgumentException("Page cannot be negative");
+        }
+
+        if (pageSize < 1 || pageSize > 100) {
+            throw new IllegalArgumentException(
+                    "Page size must be between 1 and 100"
+            );
+        }
+
+        String user = currentUserService.getCurrentUserEmail();
+
+        if(user == null) {
+            log.error("User Object Cannot be Null able");
+            return GetGroupMembersResponse.message("Something went wrong, Try Again Later");
+        }
+
+        Optional<Groups> group = groupsRepo.findByPublicGroupId(publicGroupId);
+        if(group.isEmpty()) {
+            return GetGroupMembersResponse.message("Something went wrong, Try Again Later");
+        }
+
+        if(!groupMemberRepo.existsByUserId_EmailIdAndGroupId(user, group.get())) {
+            throw new RuntimeException("{User|groupId} No Data Found");
+        }
+
+        Pageable pageable = PageRequest.of(
+                page,
+                pageSize,
+                Sort.by(
+                        Sort.Order.desc("createdAt"),
+                        Sort.Order.desc( "id")
+                )
+        );
+
+        return new GetGroupMembersResponse(
+                "Success",
+                groupMemberRepo.findEmailsByGroupId(group.get(), pageable));
     }
 }
