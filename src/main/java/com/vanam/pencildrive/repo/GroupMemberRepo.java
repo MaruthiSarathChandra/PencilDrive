@@ -1,15 +1,17 @@
 package com.vanam.pencildrive.repo;
 import com.vanam.pencildrive.domain.GroupMembers;
 import com.vanam.pencildrive.domain.Groups;
-import com.vanam.pencildrive.domain.User;
+import com.vanam.pencildrive.dto.GroupMembersResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
+
 
 
 @Repository
@@ -23,5 +25,17 @@ public interface GroupMemberRepo
         WHERE gm.groupId = :group
         AND gm.userId.emailId IN :emails
         """)
-    List<String> findEmailsByEmails(@Param("group") Groups group, List<String> emails);
+    List<String> findEmailsByEmailsAndGroup(@Param("group") Groups group, List<String> emails);
+
+
+    Boolean existsByUserId_EmailIdAndGroupId(String userId, Groups groupId);
+
+
+    @Query("""
+            SELECT new com.vanam.pencildrive.dto.GroupMembersResponse(gm.userId.emailId, gm.role)
+            FROM GroupMembers gm
+            WHERE gm.groupId = :group
+            """)
+    Slice<GroupMembersResponse> findEmailsByGroupId(@Param("group") Groups group, Pageable pageable);
+
 }
