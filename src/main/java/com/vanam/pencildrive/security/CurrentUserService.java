@@ -44,7 +44,7 @@ public class CurrentUserService {
 
     public Optional<User> requireCurrentUserObject() {
         return loginRepo
-                .findByEmailId
+                .findByEmail
                         (getCurrentUserEmail());
     }
 

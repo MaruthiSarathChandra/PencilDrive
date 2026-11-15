@@ -2,12 +2,18 @@ package com.vanam.pencildrive.controller;
 
 
 import com.vanam.pencildrive.domain.FilesMetadata;
+import com.vanam.pencildrive.domain.GroupMembers;
 import com.vanam.pencildrive.dto.*;
 import com.vanam.pencildrive.service.DriveFileService;
+import com.vanam.pencildrive.service.GroupMemberService;
 import com.vanam.pencildrive.service.GroupService;
+import com.vanam.pencildrive.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/drive/data")
@@ -45,13 +52,16 @@ public class DriverApiController {
      **/
     private final DriveFileService driveFileService;
     private final GroupService groupService;
+    private final GroupMemberService groupMemberService;
 
 
-    public DriverApiController(DriveFileService driveFileService, GroupService groupService) {
+    public DriverApiController(DriveFileService driveFileService,
+                               GroupService groupService,
+                               GroupMemberService groupMemberService) {
 
         this.driveFileService = driveFileService;
         this.groupService = groupService;
-
+        this.groupMemberService = groupMemberService;
     }
 
 
@@ -70,13 +80,11 @@ public class DriverApiController {
 
     @GetMapping("/files/my-drive")
     public ResponseEntity<Slice<FileResponse>> getMyDrive(@RequestParam(defaultValue = "0") int page) {
-
         return ResponseEntity.ok(driveFileService.getMyDriveFiles(page));
     }
 
     @GetMapping("/files/sharedwithme")
     public ResponseEntity<List<String>> getSharedWithMe() {
-
 
         //Fake Code, Develop Code
         List<String> array = new ArrayList<>();
@@ -86,8 +94,6 @@ public class DriverApiController {
 
     @GetMapping("/files/starred")
     public ResponseEntity<List<String>> getStarred() {
-
-
         //Fake Code, Develop Code
         List<String> array = new ArrayList<>();
         return ResponseEntity.ok(array);
@@ -95,16 +101,12 @@ public class DriverApiController {
 
     @PutMapping("/files/{id}/star")
     public ResponseEntity<MessageResponse> starFile(@PathVariable Long id) { //update need Id return type regarding to System Architecture / Database(entity) Architecture
-
-
         //Fake Code, Develop Code
-
         return ResponseEntity.ok( new MessageResponse("File starred successfully"));
     }
 
     @GetMapping("/trash")
     public ResponseEntity<List<String>> getTrash() {
-
         //Fake Code, Develop Code
         List<String> array = new ArrayList<>();
         return ResponseEntity.ok(array);
@@ -119,7 +121,6 @@ public class DriverApiController {
 
     @PostMapping("/files/upload")
     public ResponseEntity<UploadFileResponse> upload(@RequestParam("file") MultipartFile file) {
-
         return ResponseEntity.ok(driveFileService.uploadFile(file));
     }
 
@@ -132,15 +133,31 @@ public class DriverApiController {
         return ResponseEntity.ok(array);
     }
 
+    @GetMapping("/{publicGroupId}/group-members")
+    public ResponseEntity<GetGroupMembersResponse> getGroupMembersByGroup(@PathVariable UUID publicGroupId,
+                                                                          @RequestParam(defaultValue = "0") int page,
+                                                                          @RequestParam(defaultValue = "25") int pageSize) {
+        return ResponseEntity.ok(groupMemberService.getGroupMembers(publicGroupId, page, pageSize));
+    }
 
+    @PostMapping("/add-member")
+    public ResponseEntity<GetGroupMembersResponse> addMemeberByGroup(@RequestBody AddMemberToExistingGroup members) {
+        return ResponseEntity.ok(groupMemberService.addMemeberByGroup(members));
+    }
 
+    @DeleteMapping("/remove-group-member")
+    public ResponseEntity<Void> deleteGroupMembers(
+            @RequestBody DeleteGroupMembers deleteGroupMembers
+    ){
 
+        groupMemberService.removeMemeber(deleteGroupMembers);
+        return ResponseEntity.noContent().build();
+    }
 
-
-
-
-
-
-
+    @GetMapping("/groups")
+    public ResponseEntity<List<GetGroups>> getGroups() {
+        return ResponseEntity.ok(groupService.getGroups());
+    }
 
 }
+

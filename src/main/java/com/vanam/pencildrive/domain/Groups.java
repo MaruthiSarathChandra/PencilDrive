@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 
 import javax.swing.*;
 import java.time.LocalDateTime;
@@ -23,10 +24,10 @@ import java.util.UUID;
         },
         indexes = {
                 @Index(name = "idx_groups_owner", columnList = "owner_id"),
+                @Index(name = "idx_groups_publicGroupId", columnList = "publicGroupId")
         }
 )
 public class Groups {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -68,9 +69,7 @@ public class Groups {
     }
 
 
-
     //Getters
-
     public Long getId() { return id; }
 
     public User getOwner() { return owner; }

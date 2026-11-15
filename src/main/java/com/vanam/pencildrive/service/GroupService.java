@@ -1,25 +1,25 @@
 package com.vanam.pencildrive.service;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vanam.pencildrive.CustomException.GroupAlreadyExistsException;
 import com.vanam.pencildrive.CustomException.GroupMemberAlreadyExistsException;
-import com.vanam.pencildrive.domain.FilesMetadata;
 import com.vanam.pencildrive.domain.GroupMembers;
 import com.vanam.pencildrive.domain.Groups;
 import com.vanam.pencildrive.domain.User;
 import com.vanam.pencildrive.dto.*;
-import com.vanam.pencildrive.enums.GroupRole;
 import com.vanam.pencildrive.repo.FileMetadataRepo;
 import com.vanam.pencildrive.repo.GroupsRepo;
 import com.vanam.pencildrive.repo.LoginRepo;
 import com.vanam.pencildrive.security.CurrentUserService;
-import jakarta.annotation.Nullable;
-import jakarta.persistence.Id;
-import org.hibernate.jdbc.Expectation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 
@@ -56,6 +56,7 @@ public class GroupService {
     private final FileMetadataRepo fileMetadataRepo;
     private final PermissionService permissionService;
     private final TransactionTemplate transactionTemplate;
+    private final ObjectMapper objectMapper;
     public GroupService(
             CurrentUserService currentUserService,
             LoginRepo loginRepo,
@@ -63,7 +64,8 @@ public class GroupService {
             GroupMemberService groupMemberService,
             FileMetadataRepo fileMetadataRepo,
             PermissionService permissionService,
-            TransactionTemplate transactionTemplate
+            TransactionTemplate transactionTemplate,
+            ObjectMapper objectMapper
     ) {
         this.currentUserService = currentUserService;
         this.loginRepo = loginRepo;
@@ -72,6 +74,7 @@ public class GroupService {
         this.fileMetadataRepo = fileMetadataRepo;
         this.permissionService = permissionService;
         this.transactionTemplate = transactionTemplate;
+        this.objectMapper = objectMapper;
     }
 
     public CreateGroupResponse createGroup(CreateGroupRequest request) {
@@ -102,7 +105,7 @@ public class GroupService {
                         /** 2.Save Pending Group and Flush */
                         groupsRepo.saveAndFlush(pendingGroup),
                         /** 3. Calling for Creation Of Group Members */
-                        groupMemberService.create(request.members(), pendingGroup, owner.get())
+                        groupMemberService.create(request.members(), pendingGroup)
                 );
             } catch (GroupMemberAlreadyExistsException e) {
                 throw e;
@@ -131,7 +134,7 @@ public class GroupService {
                                 .members.stream()
                                 .map(member ->
                                         new GroupMembersResponse(
-                                                        member.getUserId().getEmailId(),
+                                                        member.getUserId().getEmail(),
                                                         member.getRole())
                                 ).toList(),
                         request.file());
@@ -144,10 +147,54 @@ public class GroupService {
                         creationResult.members.stream()
                                 .map(member ->
                                         new GroupMembersResponse(
-                                                member.getUserId().getEmailId(),
+                                                member.getUserId().getEmail(),
                                                 member.getRole())).toList()
                 );
     }
+
+    public List<GetGroups> getGroups() {
+
+        String request = currentUserService.getCurrentUserEmail();
+
+        if(request == null) {
+            log.error("<------ Found Current User email as null -> GroupService.java , line: 156 ----->");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Intruder Blocked: You are not a member of this group.");
+        }
+        try {
+            Map<UUID, GetGroups> getGroupsResponse = new HashMap<>();
+
+            groupsRepo.getGroupsJson(request).forEach(objects -> {
+               Groups group = (Groups) objects[0];
+               GroupMembers groupMembers = (GroupMembers) objects[1];
+
+               UUID publicGroupId = group.getPublicGroupId();
+
+               GetGroups dto = getGroupsResponse.computeIfAbsent(
+                       publicGroupId,
+                       id -> new GetGroups(
+                                   publicGroupId,
+                                   group.getGroupName(),
+                                   new ArrayList<>()
+                           )
+               );
+
+               if(groupMembers != null) {
+                   dto.groupMembersResponse().add(
+                           new GroupMembersResponse(groupMembers.getUserId().getEmail(),
+                                   groupMembers.getRole())
+                   );
+               }
+            });
+            return new ArrayList<>(getGroupsResponse.values());
+        } catch (Exception e) {
+            throw new IllegalStateException(
+                    "Failed to deserialize groups", e
+            );
+        }
+    }
+
+
 
     private record GroupCreationResult(Groups group, List<GroupMembers> members) {}
 }

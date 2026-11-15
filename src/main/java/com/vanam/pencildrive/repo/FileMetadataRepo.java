@@ -52,9 +52,9 @@ public interface FileMetadataRepo extends JpaRepository<FilesMetadata, Long> {
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
     UPDATE FilesMetadata f
-       SET f.status = :newStatus
-     WHERE f.id = :fileId
-       AND f.status = :oldStatus""")
+    SET f.status = :newStatus
+    WHERE f.id = :fileId
+    AND f.status = :oldStatus""")
     int transitionFileStatus(
             @Param("oldStatus") FileStatus oldStatus,
             @Param("fileId") Long fileId,

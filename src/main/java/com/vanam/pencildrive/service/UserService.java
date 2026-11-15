@@ -29,7 +29,7 @@ public class UserService {
 
 
     public AuthResponse login(LoginRequest request) {
-        Optional<User> user = loginRepo.findByEmailId(request.getEmail());
+        Optional<User> user = loginRepo.findByEmail(request.getEmail());
 
         if(user.isEmpty()) {
             return new AuthResponse(false, "Invalid email or password", null);
@@ -47,16 +47,16 @@ public class UserService {
 
 
     public AuthResponse register(SignUpRequest request) {
-        boolean exist = loginRepo.findByEmailId(request.getEmail()).isPresent();
+        boolean exist = loginRepo.findByEmail(request.getEmail()).isPresent();
 
 
-        if (loginRepo.findByEmailId(request.getEmail()).isPresent()) {
+        if (exist) {
             return new AuthResponse(false, "Email Exists!. Use Different email", null);
 
         } else {
             User obj = new User();
             obj.setUsername(request.getUserId());
-            obj.setEmailId(request.getEmail());
+            obj.setEmail(request.getEmail());
             String hashpassword = passwordEncoder.hashPassword(request.getPassword());
             obj.setPassword(hashpassword);
             obj.setStorageLimit(5*1024*1024*1024L);
@@ -70,4 +70,5 @@ public class UserService {
 
         }
     }
+
 }

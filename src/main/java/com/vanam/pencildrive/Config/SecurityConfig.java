@@ -46,7 +46,7 @@ public class SecurityConfig {
                                 response.setContentType("application/json");
 
                                 response.getWriter().write("""
-                                        { 
+                                        {
                                         "status": 401,
                                         "error": "UNAUTHORIZED",
                                         "message": "Authentication required"

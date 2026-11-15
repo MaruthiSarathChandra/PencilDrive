@@ -15,7 +15,7 @@ public class DriveController {
 
     @GetMapping("/drive")
     public String showDrive() {
-        return "home";
+        return "PencilDrive_home_v2";
     }
 
 }

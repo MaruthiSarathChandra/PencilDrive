@@ -4,5 +4,6 @@ public enum GroupRole {
     OWNER,
     ADMIN,
     MEMBER,
-    VIEWER
+    VIEWER,
+    DELETED
 }

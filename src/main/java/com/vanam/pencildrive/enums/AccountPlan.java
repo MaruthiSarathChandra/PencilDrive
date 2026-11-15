@@ -5,5 +5,6 @@ public enum AccountPlan {
     SILVER,
     GOID,
     DIAMOND,
-    PLATINUM
+    PLATINUM,
+    DISABLED
 }

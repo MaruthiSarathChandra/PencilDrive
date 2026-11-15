@@ -19,6 +19,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
 import java.util.Optional;
 
 
@@ -165,7 +168,7 @@ public class DriveFileService {
         return fileMetadataRepo
                 .findByOwner_IdAndStatus(
                         loginRepo
-                                .findIdByEmailId(
+                                .findIdByEmail(
                                         currentUserService
                                                 .getCurrentUserEmail()
                                 ).get(), // this is to get current user gmail and fetch owner
@@ -244,5 +247,6 @@ public class DriveFileService {
             log.warn("Unable to delete temporary file {}", path, e);
         }
     }
+
 
 }

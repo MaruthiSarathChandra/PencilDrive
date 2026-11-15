@@ -58,6 +58,12 @@ public class GroupMembers {
                        userId, groupId, role
                );
         }
+        public static GroupMembers upsertRole(
+                GroupMembers groupMembers,
+                GroupRole role) {
+                groupMembers.role = role;
+                return groupMembers;
+        }
 
 
         //Getters
