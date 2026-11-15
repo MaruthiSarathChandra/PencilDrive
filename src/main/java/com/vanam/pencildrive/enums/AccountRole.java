@@ -5,5 +5,6 @@ public enum AccountRole {
     ADMIN,
     USER,
     Developer,
-    EMPLOYEE
+    EMPLOYEE,
+    DELETED
 }

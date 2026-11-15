@@ -2,6 +2,8 @@ package com.vanam.pencildrive.controller;
 import com.vanam.pencildrive.dto.AuthResponse;
 import com.vanam.pencildrive.dto.LoginRequest;
 import com.vanam.pencildrive.dto.SignUpRequest;
+import com.vanam.pencildrive.dto.UploadFileResponse;
+import com.vanam.pencildrive.service.DriveFileService;
 import com.vanam.pencildrive.service.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -18,6 +20,8 @@ public class AuthController {
 
     @Autowired
     private UserService authService;
+    @Autowired
+    private DriveFileService driveFileService;
 
 
     @PostMapping("/auth/login")
@@ -47,5 +51,7 @@ public class AuthController {
         AuthResponse response = this.authService.register(request);
         return ResponseEntity.ok(response);
     }
+
+
 }
 

@@ -7,6 +7,8 @@ import com.vanam.pencildrive.dto.*;
 import com.vanam.pencildrive.service.DriveFileService;
 import com.vanam.pencildrive.service.GroupMemberService;
 import com.vanam.pencildrive.service.GroupService;
+import com.vanam.pencildrive.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -133,8 +135,29 @@ public class DriverApiController {
 
     @GetMapping("/{publicGroupId}/group-members")
     public ResponseEntity<GetGroupMembersResponse> getGroupMembersByGroup(@PathVariable UUID publicGroupId,
-                                                                          @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "25") int pageSize) {
+                                                                          @RequestParam(defaultValue = "0") int page,
+                                                                          @RequestParam(defaultValue = "25") int pageSize) {
         return ResponseEntity.ok(groupMemberService.getGroupMembers(publicGroupId, page, pageSize));
     }
+
+    @PostMapping("/add-member")
+    public ResponseEntity<GetGroupMembersResponse> addMemeberByGroup(@RequestBody AddMemberToExistingGroup members) {
+        return ResponseEntity.ok(groupMemberService.addMemeberByGroup(members));
+    }
+
+    @DeleteMapping("/remove-group-member")
+    public ResponseEntity<Void> deleteGroupMembers(
+            @RequestBody DeleteGroupMembers deleteGroupMembers
+    ){
+
+        groupMemberService.removeMemeber(deleteGroupMembers);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/groups")
+    public ResponseEntity<List<GetGroups>> getGroups() {
+        return ResponseEntity.ok(groupService.getGroups());
+    }
+
 }
 

@@ -44,13 +44,13 @@ public class ProfileService {
     // 1. Profile
     public ProfileResponse getProfile() {
 
-        String emailId = currentUserService.getCurrentUserEmail();
-        System.out.println(emailId);
+        String email = currentUserService.getCurrentUserEmail();
+        System.out.println(email);
 
 
         //2. Query the database exactly ONCE. Throw exception if user is missing / inactive.
         // Retrieve User Related Data
-        Optional<User> user = userRepository.findUserByEmailIdAndStatus(emailId, AccountStatus.ACTIVE);
+        Optional<User> user = userRepository.findUserByEmailAndStatus(email, AccountStatus.ACTIVE);
 
         if(user.isEmpty()) {
             return new ProfileResponse(
@@ -62,7 +62,7 @@ public class ProfileService {
 
         // 3. Map values directly to Response object in matching constructor order: (username, email, message)
         return new ProfileResponse("200", user.get().getUsername(), user.get().getStatus(),
-                user.get().getEmailId(), user.get().getRole(),
+                user.get().getEmail(), user.get().getRole(),
                 user.get().getPlan(), user.get().getStorageLimit(), user.get().getStorageUsed());
     }
 

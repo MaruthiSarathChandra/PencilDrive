@@ -8,7 +8,7 @@ public class ProfileResponse {
 
 
     private String userName;
-    private String emailId;
+    private String email;
     private String message;
     private AccountRole role;
     private AccountPlan plan;
@@ -18,12 +18,12 @@ public class ProfileResponse {
 
 
     public ProfileResponse(@Nullable String message, @Nullable String userName, @Nullable AccountStatus status,
-                           @Nullable String emailId, @Nullable AccountRole role,
+                           @Nullable String email, @Nullable AccountRole role,
                            @Nullable AccountPlan plan, @Nullable Long storageLimit, @Nullable Long storageUsed) {
         this.message = message;
         this.userName = userName;
         this.status = status;
-        this.emailId = emailId;
+        this.email = email;
         this.role = role;
         this.plan = plan;
         this.storageLimit = storageLimit;
@@ -36,9 +36,9 @@ public class ProfileResponse {
 
     public void setUserName(String userName) { this.userName = userName; }
 
-    public String getEmailId() { return emailId; }
+    public String getemail() { return email; }
 
-    public void setEmailId(String emailId) { this.emailId = emailId; }
+    public void setemail(String email) { this.email = email; }
 
     public String getMessage() { return message; }
 
