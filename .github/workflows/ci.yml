@@ -1,0 +1,90 @@
+
+name: PencilDrive CI
+
+on:
+  push:
+    branches:
+      - main
+      - 'release/**'
+      - 'feature/**'
+
+  pull_request:
+    branches:
+      - main
+      - 'release/**'
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Build and Test PencilDrive
+
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 20
+
+    services:
+      mysql:
+        image: mysql:8.4
+
+        env:
+          MYSQL_ROOT_PASSWORD: ci-root-password
+          MYSQL_DATABASE: filedrive_test
+          MYSQL_USER: app
+          MYSQL_PASSWORD: ci-test-password
+
+        ports:
+          - 3306:3306
+
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/filedrive_test
+      SPRING_DATASOURCE_USERNAME: app
+      SPRING_DATASOURCE_PASSWORD: ci-test-password
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 10
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
+      JWT_SECRET: pencil-drive-ci-only-test-secret-012345678901234567890123456789
+      PENCILDRIVE_STORAGE_LOCAL_PATH: /tmp/pencildrive-storage
+      SPRING_KAFKA_LISTENER_AUTO_STARTUP: 'false'
+
+    steps:
+      - name: Checkout PencilDrive source code
+        uses: actions/checkout@v6
+
+      - name: Configure Java 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Prepare file storage
+        run: mkdir -p /tmp/pencildrive-storage
+
+      - name: Build, test and verify PencilDrive
+        run: mvn -B clean verify
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pencildrive-test-reports
+          path: target/surefire-reports/
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload application JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: pencildrive-application
+          path: target/*.jar
+          if-no-files-found: error
+          retention-days: 7
