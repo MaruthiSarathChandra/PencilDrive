@@ -1,0 +1,11 @@
+name: Learn GitHub Actions
+
+on: push
+
+jobs:
+  first-job:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: First command
+        run: echo "Hello PencilDrive"
